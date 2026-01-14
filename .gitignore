@@ -1,0 +1,84 @@
+# =========================
+# Xcode
+# =========================
+DerivedData/
+build/
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# =========================
+# Swift Package Manager
+# =========================
+.build/
+Packages/
+Package.resolved
+
+# =========================
+# CocoaPods (if ever used)
+# =========================
+Pods/
+
+# =========================
+# Carthage (just in case)
+# =========================
+Carthage/Build/
+
+# =========================
+# macOS
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# =========================
+# Xcode playgrounds
+# =========================
+timeline.xctimeline
+playground.xcworkspace
+
+# =========================
+# Logs & temp
+# =========================
+*.log
+*.tmp
+*.swp
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+Secrets.plist
+GoogleService-Info.plist
+
+# =========================
+# Fastlane
+# =========================
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# =========================
+# Coverage
+# =========================
+*.profdata
+
+# =========================
+# Archive
+# =========================
+*.xcarchive
