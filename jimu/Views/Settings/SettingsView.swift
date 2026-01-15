@@ -12,6 +12,8 @@ struct SettingsView: View {
     @AppStorage("appearanceMode") private var appearanceMode = 0 // 0: System, 1: Light, 2: Dark
     @AppStorage("isAppleHealthSyncEnabled") private var isAppleHealthSyncEnabled = false
     
+    @State private var showLogoutAlert = false
+    
     var body: some View {
         List {
             // アカウント設定
@@ -82,7 +84,7 @@ struct SettingsView: View {
             // ログアウト
             Section {
                 Button(action: {
-                    // ログアウト処理
+                    showLogoutAlert = true
                 }) {
                     Text("ログアウト")
                         .foregroundColor(.red)
@@ -91,6 +93,14 @@ struct SettingsView: View {
         }
         .navigationTitle("設定")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("ログアウト", isPresented: $showLogoutAlert) {
+            Button("キャンセル", role: .cancel) {}
+            Button("ログアウト", role: .destructive) {
+                // TODO: ログアウト処理
+            }
+        } message: {
+            Text("本当にログアウトしますか？")
+        }
     }
 }
 #Preview {
