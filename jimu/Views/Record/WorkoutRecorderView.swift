@@ -29,161 +29,56 @@ struct WorkoutRecorderView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                if viewModel.showCompletionAnimation {
-                    completionView
-                } else if viewModel.isWorkoutActive {
-                    activeWorkoutView
-                } else {
-                    startView
-                }
-            }
-            .toolbar {
-                // トレーニング中のみ左上に最小化ボタンを表示
-                if viewModel.isWorkoutActive {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button(action: {
-                            // 最小化ボタン：ホームタブへ移動
-                            // これによりMainTabView側でミニプレイヤーが表示される
-                            selectedTab = .home
-                        }) {
-                            Image(systemName: "chevron.down")
-                                .foregroundColor(.primary)
-                                .font(.system(size: 16, weight: .semibold))
-                                .frame(width: 32, height: 32)
-                                .contentShape(Rectangle()) // タップ領域を広げる
-                        }
-                    }
-                    
-                    ToolbarItem(placement: .principal) {
-                        VStack(spacing: 2) {
-                            Text(viewModel.formattedElapsedTime)
-                                .font(.headline)
-                                .fontWeight(.bold)
-                                .monospacedDigit()
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.green, .mint],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                            
-                            Text("\(viewModel.selectedExercises.count)種目 • \(viewModel.completedSetsCount)/\(viewModel.totalSetsCount)セット")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
-            .sheet(isPresented: Bindable(viewModel).showExercisePicker) {
-                ExercisePickerView { exercise in
-                    viewModel.addExercise(exercise)
-                }
-            }
-            .sheet(isPresented: $showAddRoutineSheet) {
-                // ルーティン追加シート
-                VStack {
-                    Text("ルーティンを追加")
-                        .font(.headline)
-                        .padding(.top)
-                    
-                    List {
-                        ForEach(routines, id: \.self) { routine in
-                            Button(action: {
-                                // TODO: ルーティンを選択した時の処理
-                                showAddRoutineSheet = false
-                            }) {
-                                Text(routine)
-                                    .foregroundColor(.primary)
+            startView
+                .fullScreenCover(isPresented: Bindable(viewModel).isWorkoutExpanded) {
+                    NavigationStack {
+                        ZStack {
+                            if viewModel.showCompletionAnimation {
+                                completionView
+                            } else {
+                                activeWorkoutView
                             }
                         }
-                    }
-                }
-                .presentationDetents([.medium, .large])
-            }
-            .sheet(isPresented: Bindable(viewModel).showRestTimerPicker) {
-                // 休憩タイマー設定シート
-                RestTimerPickerSheet(duration: Bindable(viewModel).restTimerDuration)
-                    .presentationDetents([.height(300)])
-            }
-            .sheet(isPresented: $showReorderSheet) {
-                ExerciseReorderView(exercises: Bindable(viewModel).selectedExercises)
-            }
-            .sheet(isPresented: $showExerciseMenu) {
-                // 種目メニューシート（ハーフモーダル）
-                VStack(spacing: 0) {
-                    Text("種目メニュー")
-                        .font(.headline)
-                        .padding(.top)
-                        .padding(.bottom, 20)
-                    
-                    VStack(spacing: 0) {
-                        Button(action: {
-                            showExerciseMenu = false
-                            // シートが閉じてから次のシートを開くために少し遅延させる
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                showReorderSheet = true
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: "arrow.up.arrow.down")
-                                    .frame(width: 24)
-                                    Text("並び替え・削除")
-                                Spacer()
-                            }
-                            .padding()
-                            .foregroundColor(.primary)
-                        }
-                        
-                        Divider()
-                            .padding(.leading)
-                        
-                        if let exercise = activeExerciseForMenu {
-                            Button(action: {
-                                withAnimation {
-                                    viewModel.removeExercise(exercise)
+                        .toolbar {
+                            // トレーニング中のみ（完了画面以外）表示
+                            if !viewModel.showCompletionAnimation {
+                                ToolbarItem(placement: .topBarLeading) {
+                                    Button(action: {
+                                        viewModel.isWorkoutExpanded = false
+                                        // 最小化して他のタブを見たい場合はここで切り替えることも可能
+                                        // selectedTab = .home 
+                                    }) {
+                                        Image(systemName: "chevron.down")
+                                            .foregroundColor(.primary)
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .frame(width: 32, height: 32)
+                                            .contentShape(Rectangle()) // タップ領域を広げる
+                                    }
                                 }
-                                showExerciseMenu = false
-                            }) {
-                                HStack {
-                                    Image(systemName: "trash")
-                                        .frame(width: 24)
-                                    Text("この種目を削除")
-                                    Spacer()
+                                
+                                ToolbarItem(placement: .principal) {
+                                    VStack(spacing: 2) {
+                                        Text(viewModel.formattedElapsedTime)
+                                            .font(.headline)
+                                            .fontWeight(.bold)
+                                            .monospacedDigit()
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.green, .mint],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                )
+                                            )
+                                        
+                                        Text("\(viewModel.selectedExercises.count)種目 • \(viewModel.completedSetsCount)/\(viewModel.totalSetsCount)セット")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
-                                .padding()
-                                .foregroundColor(.red)
                             }
                         }
                     }
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    
-                    Button(action: {
-                        showExerciseMenu = false
-                    }) {
-                        Text("キャンセル")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color(.systemGray5))
-                            .foregroundColor(.primary)
-                            .cornerRadius(12)
-                    }
-                    .padding()
                 }
-                .presentationDetents([.height(250)])
-                .presentationDragIndicator(.visible)
-                .background(Color(.systemGroupedBackground))
-            }
-            .confirmationDialog("トレーニングを中止しますか？", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
-                Button("中止する", role: .destructive) {
-                    viewModel.cancelWorkout()
-                }
-                Button("続ける", role: .cancel) {}
-            }
         }
     }
     
@@ -277,11 +172,15 @@ struct WorkoutRecorderView: View {
             .padding(.bottom, 12)
             
             Button(action: {
-                viewModel.startWorkout()
+                if viewModel.isWorkoutActive {
+                    viewModel.isWorkoutExpanded = true
+                } else {
+                    viewModel.startWorkout()
+                }
             }) {
                 HStack(spacing: 12) {
-                    Image(systemName: "play.fill")
-                    Text("トレーニング開始")
+                    Image(systemName: viewModel.isWorkoutActive ? "arrow.triangle.2.circlepath" : "play.fill")
+                    Text(viewModel.isWorkoutActive ? "トレーニングに戻る" : "トレーニング開始")
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)

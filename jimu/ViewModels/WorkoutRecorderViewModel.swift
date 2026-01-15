@@ -13,6 +13,7 @@ import SwiftUI
 final class WorkoutRecorderViewModel {
     // MARK: - Workout State
     var isWorkoutActive = false
+    var isWorkoutExpanded = false // ワークアウト画面が展開されているか（全画面表示か）
     var showCompletionAnimation = false
     var currentWorkout: Workout?
     
@@ -63,6 +64,7 @@ final class WorkoutRecorderViewModel {
     
     func startWorkout() {
         isWorkoutActive = true
+        isWorkoutExpanded = true // 開始時は展開する
         elapsedSeconds = 0
         selectedExercises = []
         workoutSets = [:]
@@ -79,6 +81,7 @@ final class WorkoutRecorderViewModel {
     func finishWorkout() {
         stopTimer()
         isWorkoutActive = false
+        isWorkoutExpanded = true // 完了画面は全画面で表示
         showCompletionAnimation = true
         
         currentWorkout?.endedAt = Date()
@@ -94,6 +97,7 @@ final class WorkoutRecorderViewModel {
     func cancelWorkout() {
         stopTimer()
         isWorkoutActive = false
+        isWorkoutExpanded = false
         elapsedSeconds = 0
         selectedExercises = []
         workoutSets = [:]

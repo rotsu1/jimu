@@ -50,9 +50,10 @@ struct MainTabView: View {
             .tint(.green)
             
             // トレーニング中ミニプレイヤー（記録タブ以外で表示）
-            if workoutViewModel.isWorkoutActive && selectedTab != .record {
+            if workoutViewModel.isWorkoutActive && !workoutViewModel.isWorkoutExpanded {
                 Button(action: {
                     selectedTab = .record
+                    workoutViewModel.isWorkoutExpanded = true
                 }) {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
