@@ -11,6 +11,7 @@ struct PremiumPlanView: View {
     @State private var selectedPlan: PlanType = .yearly
     
     enum PlanType {
+        case free
         case monthly
         case yearly
         case lifetime
@@ -37,6 +38,16 @@ struct PremiumPlanView: View {
                 
                 // プラン選択
                 VStack(spacing: 16) {
+                    PlanOptionCard(
+                        title: "フリープラン",
+                        price: "¥0",
+                        description: "基本的な機能のみ利用可能",
+                        isSelected: selectedPlan == .free,
+                        action: { selectedPlan = .free }
+                    )
+                    
+                    Spacer(minLength: 8) // フリーと有料プランを少し離す
+                    
                     PlanOptionCard(
                         title: "月額プラン",
                         price: "¥480 / 月",
