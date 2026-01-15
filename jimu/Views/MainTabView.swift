@@ -10,6 +10,7 @@ import SwiftUI
 /// メインタブナビゲーション
 struct MainTabView: View {
     @State private var selectedTab: Tab = .home
+    @Environment(WorkoutRecorderViewModel.self) private var workoutViewModel
     
     enum Tab: String, CaseIterable {
         case home = "ホーム"
@@ -26,30 +27,71 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            TimelineView()
-                .tabItem {
-                    Label(Tab.home.rawValue, systemImage: Tab.home.iconName)
-                }
-                .tag(Tab.home)
+        ZStack(alignment: .bottom) {
+            TabView(selection: $selectedTab) {
+                TimelineView()
+                    .tabItem {
+                        Label(Tab.home.rawValue, systemImage: Tab.home.iconName)
+                    }
+                    .tag(Tab.home)
+                
+                WorkoutRecorderView(selectedTab: $selectedTab)
+                    .tabItem {
+                        Label(Tab.record.rawValue, systemImage: Tab.record.iconName)
+                    }
+                    .tag(Tab.record)
+                
+                ProfileView()
+                    .tabItem {
+                        Label(Tab.profile.rawValue, systemImage: Tab.profile.iconName)
+                    }
+                    .tag(Tab.profile)
+            }
+            .tint(.green)
             
-            WorkoutRecorderView()
-                .tabItem {
-                    Label(Tab.record.rawValue, systemImage: Tab.record.iconName)
+            // トレーニング中ミニプレイヤー（記録タブ以外で表示）
+            if workoutViewModel.isWorkoutActive && selectedTab != .record {
+                Button(action: {
+                    selectedTab = .record
+                }) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("トレーニング中")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+                            Text(workoutViewModel.formattedElapsedTime)
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.primary)
+                                .monospacedDigit()
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.up")
+                            .font(.headline)
+                            .foregroundColor(.green)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                    )
                 }
-                .tag(Tab.record)
-            
-            ProfileView()
-                .tabItem {
-                    Label(Tab.profile.rawValue, systemImage: Tab.profile.iconName)
-                }
-                .tag(Tab.profile)
+                .padding(.horizontal)
+                .padding(.bottom, 60) // タブバーの上に表示するためのパディング
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
-        .tint(.green)
     }
 }
 
 #Preview {
     MainTabView()
         .preferredColorScheme(.dark)
+        .environment(WorkoutRecorderViewModel())
 }

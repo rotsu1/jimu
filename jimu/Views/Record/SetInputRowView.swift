@@ -13,6 +13,8 @@ struct SetInputRowView: View {
     @State var weight: Double
     @State var reps: Int
     @State var isCompleted: Bool
+    let previousWeight: Double? // 前回の重量
+    let previousReps: Int? // 前回の回数
     
     let onWeightChange: (Double) -> Void
     let onRepsChange: (Int) -> Void
@@ -20,57 +22,66 @@ struct SetInputRowView: View {
     let onDelete: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
-            // セット番号
+        HStack(spacing: 0) {
+            // セット番号 (44pt)
             Text("\(setNumber)")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundColor(.secondary)
-                .frame(width: 24)
+                .frame(width: 44, alignment: .center)
             
-            // 重量入力
-            HStack(spacing: 4) {
+            // 前回記録 (80pt)
+            VStack(alignment: .center, spacing: 2) {
+                if let prevWeight = previousWeight, let prevReps = previousReps {
+                    Text("\(prevWeight.formatted())kg")
+                    Text("x \(prevReps)")
+                } else {
+                    Text("-")
+                }
+            }
+            .font(.caption2)
+            .foregroundColor(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .frame(width: 80, alignment: .center)
+            
+            // 重量入力 (90pt)
+            HStack(spacing: 0) {
+                Spacer() // 中央揃えのためのSpacer
                 TextField("0", value: $weight, format: .number)
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.center)
                     .font(.body)
                     .fontWeight(.medium)
-                    .frame(width: 56)
-                    .padding(.vertical, 8)
-                    .background(Color(.systemGray5))
-                    .cornerRadius(8)
+                    .frame(width: 60, height: 32) // 幅を制限して中央に寄せる
+                    .cornerRadius(6)
                     .onChange(of: weight) { _, newValue in
                         onWeightChange(newValue)
                     }
-                
-                Text("kg")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Spacer() // 中央揃えのためのSpacer
             }
+            .frame(width: 90, alignment: .center)
             
-            // 回数入力
-            HStack(spacing: 4) {
+            // 回数入力 (80pt)
+            HStack(spacing: 0) {
+                Spacer() // 中央揃えのためのSpacer
                 TextField("0", value: $reps, format: .number)
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.center)
                     .font(.body)
                     .fontWeight(.medium)
-                    .frame(width: 48)
-                    .padding(.vertical, 8)
-                    .background(Color(.systemGray5))
-                    .cornerRadius(8)
+                    .frame(width: 60, height: 32) // 幅を制限して中央に寄せる
+                    .cornerRadius(6)
                     .onChange(of: reps) { _, newValue in
                         onRepsChange(newValue)
                     }
-                
-                Text("回")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Spacer() // 中央揃えのためのSpacer
             }
+            .frame(width: 80, alignment: .center)
             
             Spacer()
             
-            // 完了チェックボックス
+            // 完了チェックボックス (40pt)
             Button(action: {
                 isCompleted.toggle()
                 onCompletedChange(isCompleted)
@@ -79,25 +90,22 @@ struct SetInputRowView: View {
                     .font(.title2)
                     .foregroundColor(isCompleted ? .green : .secondary)
             }
-            
-            // 削除ボタン
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .font(.subheadline)
-                    .foregroundColor(.red.opacity(0.7))
-            }
+            .frame(width: 40, alignment: .center)
         }
         .padding(.vertical, 4)
+        .padding(.horizontal, 4)
     }
 }
 
 #Preview {
-    VStack(spacing: 8) {
+    VStack {
         SetInputRowView(
             setNumber: 1,
             weight: 60,
             reps: 10,
             isCompleted: true,
+            previousWeight: 55,
+            previousReps: 10,
             onWeightChange: { _ in },
             onRepsChange: { _ in },
             onCompletedChange: { _ in },
@@ -108,16 +116,8 @@ struct SetInputRowView: View {
             weight: 65,
             reps: 8,
             isCompleted: false,
-            onWeightChange: { _ in },
-            onRepsChange: { _ in },
-            onCompletedChange: { _ in },
-            onDelete: {}
-        )
-        SetInputRowView(
-            setNumber: 3,
-            weight: 70,
-            reps: 6,
-            isCompleted: false,
+            previousWeight: 60,
+            previousReps: 8,
             onWeightChange: { _ in },
             onRepsChange: { _ in },
             onCompletedChange: { _ in },

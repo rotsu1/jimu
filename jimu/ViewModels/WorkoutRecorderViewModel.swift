@@ -20,6 +20,14 @@ final class WorkoutRecorderViewModel {
     var elapsedSeconds: Int = 0
     private var timer: Timer?
     
+    // MARK: - Rest Timer
+    var restTimerSeconds: Int = 0
+    var isRestTimerActive: Bool = false
+    var restTimerDuration: Int = 60 // デフォルト60秒
+    private var restTimer: Timer?
+    var showRestTimerPicker: Bool = false
+    var activeExerciseIdForRestTimer: UUID?
+    
     // MARK: - Exercise & Sets
     var selectedExercises: [Exercise] = []
     var workoutSets: [UUID: [WorkoutSet]] = [:] // exerciseId -> sets
@@ -105,6 +113,55 @@ final class WorkoutRecorderViewModel {
         timer = nil
     }
     
+    // MARK: - Rest Timer Logic
+    
+    func startRestTimer() {
+        // 既存のタイマーがあれば停止
+        stopRestTimer()
+        
+        restTimerSeconds = restTimerDuration
+        isRestTimerActive = true
+        
+        restTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            if self.restTimerSeconds > 0 {
+                self.restTimerSeconds -= 1
+            } else {
+                self.stopRestTimer()
+                // TODO: タイマー終了時の通知やサウンド
+            }
+        }
+    }
+    
+    func stopRestTimer() {
+        restTimer?.invalidate()
+        restTimer = nil
+        isRestTimerActive = false
+    }
+    
+    var formattedRestTime: String {
+        let minutes = restTimerSeconds / 60
+        let seconds = restTimerSeconds % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    var formattedRestDuration: String {
+        if restTimerDuration == 0 {
+            return "なし"
+        }
+        let minutes = restTimerDuration / 60
+        let seconds = restTimerDuration % 60
+        if minutes > 0 {
+            if seconds > 0 {
+                return "\(minutes)分\(seconds)秒"
+            } else {
+                return "\(minutes)分"
+            }
+        } else {
+            return "\(seconds)秒"
+        }
+    }
+    
     // MARK: - Exercise Management
     
     func addExercise(_ exercise: Exercise) {
@@ -167,6 +224,11 @@ final class WorkoutRecorderViewModel {
         }
         if let isCompleted = isCompleted {
             sets[index].isCompleted = isCompleted
+            // セット完了時に休憩タイマーを開始（完了になった場合のみ）
+            // かつ、タイマー時間が設定されている場合（0秒以外）
+            if isCompleted && restTimerDuration > 0 {
+                startRestTimer()
+            }
         }
         
         workoutSets[exerciseId] = sets
