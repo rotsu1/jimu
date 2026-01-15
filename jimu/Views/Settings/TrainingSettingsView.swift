@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit // Import UIKit for UIColor
 
 struct TrainingSettingsView: View {
     @AppStorage("soundEnabled") private var soundEnabled = true
@@ -16,17 +17,38 @@ struct TrainingSettingsView: View {
     @AppStorage("distanceUnit") private var distanceUnit = "km"
     @AppStorage("lengthUnit") private var lengthUnit = "cm"
     
+    @State private var showTimerSheet = false
+    
+    // 0秒(オフ)から5分(300秒)まで5秒刻み
+    private let timerOptions = Array(stride(from: 0, through: 300, by: 5))
+    
     var body: some View {
         List {
             Section(header: Text("全般")) {
-                Toggle("サウンド効果", isOn: $soundEnabled)
-                
-                HStack {
-                    Text("デフォルトタイマー")
-                    Spacer()
-                    // 簡易的にStepperで秒数を変更
-                    Stepper("\(defaultTimerDuration)秒", value: $defaultTimerDuration, in: 30...600, step: 30)
+                NavigationLink(destination: SoundSettingsView()) {
+                    HStack {
+                        Text("サウンド効果")
+                        Spacer()
+                        Text(soundEnabled ? "オン" : "オフ")
+                            .foregroundColor(.secondary)
+                    }
                 }
+                
+                Button(action: {
+                    showTimerSheet = true
+                }) {
+                    HStack {
+                        Text("デフォルトタイマー")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Text(formatDuration(defaultTimerDuration))
+                            .foregroundColor(.secondary)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Color(uiColor: .tertiaryLabel))
+                    }
+                }
+                .foregroundColor(.primary) // Ensure button text doesn't turn blue
             }
             
             Section(header: Text("入力設定"), footer: Text("「前回の値を使用」をオンにすると、同じ種目の前回の記録が自動的に入力されます。オフの場合はルーティンのデフォルト値または空欄になります。")) {
@@ -56,6 +78,55 @@ struct TrainingSettingsView: View {
             }
         }
         .navigationTitle("トレーニング設定")
+        .sheet(isPresented: $showTimerSheet) {
+            VStack {
+                Text("デフォルトタイマー時間")
+                    .font(.headline)
+                    .padding(.top)
+                
+                Picker("時間", selection: $defaultTimerDuration) {
+                    ForEach(timerOptions, id: \.self) { seconds in
+                        Text(formatDuration(seconds))
+                            .tag(seconds)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .labelsHidden()
+                
+                Button(action: {
+                    showTimerSheet = false
+                }) {
+                    Text("完了")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                .padding(.horizontal)
+            }
+            .presentationDetents([.height(360)]) // Slightly taller for button
+            .presentationDragIndicator(.visible)
+        }
+    }
+    
+    private func formatDuration(_ seconds: Int) -> String {
+        if seconds == 0 {
+            return "オフ"
+        }
+        let minutes = seconds / 60
+        let remainingSeconds = seconds % 60
+        if minutes > 0 {
+            if remainingSeconds > 0 {
+                return "\(minutes)分 \(remainingSeconds)秒"
+            } else {
+                return "\(minutes)分"
+            }
+        } else {
+            return "\(remainingSeconds)秒"
+        }
     }
 }
 
@@ -64,4 +135,3 @@ struct TrainingSettingsView: View {
         TrainingSettingsView()
     }
 }
-
