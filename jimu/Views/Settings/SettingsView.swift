@@ -69,7 +69,7 @@ struct SettingsView: View {
             
             // その他
             Section(header: Text("その他")) {
-                Toggle(isOn: $isAppleHealthSyncEnabled) {
+                NavigationLink(destination: HealthSyncView()) {
                     Label("ヘルスケア連携", systemImage: "heart.text.square")
                 }
                 
