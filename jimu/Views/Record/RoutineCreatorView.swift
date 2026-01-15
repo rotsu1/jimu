@@ -152,8 +152,10 @@ struct RoutineCreatorView: View {
                 }
             }
             .sheet(isPresented: $viewModel.showExercisePicker) {
-                ExercisePickerView { exercise in
-                    viewModel.addExercise(exercise)
+                ExercisePickerView { exercises in
+                    for exercise in exercises {
+                        viewModel.addExercise(exercise)
+                    }
                 }
             }
             .sheet(isPresented: $viewModel.showRestTimerPicker) {

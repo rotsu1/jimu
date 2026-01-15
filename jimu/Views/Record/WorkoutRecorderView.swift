@@ -80,8 +80,10 @@ struct WorkoutRecorderView: View {
                             }
                         }
                         .sheet(isPresented: Bindable(viewModel).showExercisePicker) {
-                            ExercisePickerView { exercise in
-                                viewModel.addExercise(exercise)
+                            ExercisePickerView { exercises in
+                                for exercise in exercises {
+                                    viewModel.addExercise(exercise)
+                                }
                             }
                         }
                         .sheet(isPresented: Bindable(viewModel).showRestTimerPicker) {

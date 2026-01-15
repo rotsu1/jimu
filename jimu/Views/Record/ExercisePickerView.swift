@@ -13,7 +13,9 @@ struct ExercisePickerView: View {
     @State private var searchText = ""
     @State private var selectedMuscleGroup: MuscleGroup?
     
-    let onSelect: (Exercise) -> Void
+    @State private var selectedExercises: [Exercise] = []
+    
+    let onSelect: ([Exercise]) -> Void
     
     private var filteredExercises: [Exercise] {
         var exercises = MockData.shared.exercises
@@ -39,8 +41,7 @@ struct ExercisePickerView: View {
                 List {
                     ForEach(filteredExercises) { exercise in
                         Button(action: {
-                            onSelect(exercise)
-                            dismiss()
+                            toggleSelection(exercise)
                         }) {
                             HStack(spacing: 12) {
                                 Image(systemName: exercise.muscleGroup.iconName)
@@ -60,8 +61,21 @@ struct ExercisePickerView: View {
                                 
                                 Spacer()
                                 
-                                Image(systemName: "plus.circle")
-                                    .foregroundColor(.green)
+                                if let index = selectedExercises.firstIndex(where: { $0.id == exercise.id }) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.green)
+                                            .frame(width: 24, height: 24)
+                                        Text("\(index + 1)")
+                                            .font(.caption)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                    }
+                                } else {
+                                    Image(systemName: "circle")
+                                        .foregroundColor(.secondary)
+                                        .font(.title3)
+                                }
                             }
                             .contentShape(Rectangle())
                         }
@@ -69,6 +83,27 @@ struct ExercisePickerView: View {
                     }
                 }
                 .listStyle(.plain)
+                
+                // 追加ボタン
+                if !selectedExercises.isEmpty {
+                    VStack {
+                        Button(action: {
+                            onSelect(selectedExercises)
+                            dismiss()
+                        }) {
+                            Text("\(selectedExercises.count)種目を追加")
+                                .fontWeight(.bold)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.green)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
+                        .padding()
+                    }
+                    .background(Color(.systemBackground))
+                    .shadow(radius: 2)
+                }
             }
             .navigationTitle("種目を選択")
             .navigationBarTitleDisplayMode(.inline)
@@ -80,6 +115,14 @@ struct ExercisePickerView: View {
                 }
             }
             .searchable(text: $searchText, prompt: "種目を検索")
+        }
+    }
+    
+    private func toggleSelection(_ exercise: Exercise) {
+        if let index = selectedExercises.firstIndex(where: { $0.id == exercise.id }) {
+            selectedExercises.remove(at: index)
+        } else {
+            selectedExercises.append(exercise)
         }
     }
     
@@ -136,8 +179,8 @@ struct FilterChip: View {
 }
 
 #Preview {
-    ExercisePickerView { exercise in
-        print("Selected: \(exercise.nameJa)")
+    ExercisePickerView { exercises in
+        print("Selected: \(exercises.map(\.nameJa).joined(separator: ", "))")
     }
     .preferredColorScheme(.dark)
 }
