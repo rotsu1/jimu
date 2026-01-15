@@ -48,7 +48,7 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: SettingsView()) {
+                    NavigationLink(destination: SettingsView().toolbar(.hidden, for: .tabBar)) {
                         Image(systemName: "gearshape")
                             .foregroundColor(.primary)
                     }
