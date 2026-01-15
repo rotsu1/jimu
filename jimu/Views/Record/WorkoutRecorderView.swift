@@ -175,18 +175,17 @@ struct WorkoutRecorderView: View {
     
     private var startView: some View {
         VStack(spacing: 0) {
-            Spacer()
-            
+            // Header (Fixed)
             VStack(spacing: 16) {
                 Image(systemName: "dumbbell.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.green, .mint],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+                    .font(.system(size: 80))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.green, .mint],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                )
                 
                 Text("トレーニングを始めよう")
                     .font(.title2)
@@ -197,68 +196,71 @@ struct WorkoutRecorderView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
+            .padding(.top, 40)
+            .padding(.bottom, 20)
             
-            Spacer()
-            
-            // ルーティンリスト（ボタンの上に表示）
-            if !viewModel.savedRoutines.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("マイ・ルーティン")
-                        .font(.headline)
-                        .padding(.horizontal)
-                    
-                    VStack(spacing: 12) {
-                        ForEach(viewModel.savedRoutines) { routine in
-                            Button(action: {
-                                viewModel.startWorkout(from: routine)
-                            }) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(routine.name)
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.primary)
-                                        
-                                        Text("\(routine.exercises.count)種目")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+            // Scrollable Content
+            ScrollView {
+                VStack(spacing: 20) {
+                    // ルーティンリスト
+                    if !viewModel.savedRoutines.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("マイ・ルーティン")
+                                .font(.headline)
+                                .padding(.horizontal)
+                            
+                            VStack(spacing: 12) {
+                                ForEach(viewModel.savedRoutines) { routine in
+                                    Button(action: {
+                                        viewModel.startWorkout(from: routine)
+                                    }) {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(routine.name)
+                                                    .font(.subheadline)
+                                                    .fontWeight(.semibold)
+                                                    .foregroundColor(.primary)
+                                                
+                                                Text("\(routine.exercises.count)種目")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(Color(.tertiaryLabel))
+                                        }
+                                        .padding()
+                                        .background(Color(.systemGray6))
+                                        .cornerRadius(12)
                                     }
-                                    
-                                    Spacer()
-                                    
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(Color(.tertiaryLabel))
                                 }
-                                .padding()
-                                .background(Color(.systemGray6))
-                                .cornerRadius(12)
                             }
+                            .padding(.horizontal)
                         }
                     }
-                    .padding(.horizontal)
+                    
+                    Button(action: {
+                        showAddRoutineSheet = true
+                    }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "plus.square.on.square")
+                            Text("ルーティンを追加")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color(.systemGray5))
+                        .foregroundColor(.primary)
+                        .cornerRadius(16)
+                    }
+                    .padding(.horizontal, 24)
                 }
-                .padding(.bottom, 8)
+                .padding(.bottom, 20)
             }
-
-            Spacer()
             
-            Button(action: {
-                showAddRoutineSheet = true
-            }) {
-                HStack(spacing: 12) {
-                    Image(systemName: "plus.square.on.square")
-                    Text("ルーティンを追加")
-                        .fontWeight(.semibold)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Color(.systemGray5))
-                .foregroundColor(.primary)
-                .cornerRadius(16)
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 12)
-            
+            // Footer (Fixed)
             Button(action: {
                 if viewModel.isWorkoutActive {
                     viewModel.isWorkoutExpanded = true
@@ -284,7 +286,8 @@ struct WorkoutRecorderView: View {
                 .cornerRadius(16)
             }
             .padding(.horizontal, 24)
-            .padding(.bottom, 100) // タブバーに隠れないようにパディングを増やす
+            .padding(.bottom, 20) // タブバーの上の余白
+            .padding(.top, 10) // スクロールビューとの余白
         }
     }
     
