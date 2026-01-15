@@ -16,7 +16,6 @@ struct WorkoutRecorderView: View {
     @State private var showExerciseMenu = false // 追加
     @State private var showReorderSheet = false // 追加
     @State private var activeExerciseForMenu: Exercise? // 追加
-    @State private var routines = ["全身トレーニング", "胸・背中", "脚トレ", "朝の軽い運動"] // ダミーデータ
     
     // プレビュー用イニシャライザ（Bindingを使わない場合用）
     init(selectedTab: Binding<MainTabView.Tab>? = nil) {
@@ -30,6 +29,9 @@ struct WorkoutRecorderView: View {
     var body: some View {
         NavigationStack {
             startView
+                .sheet(isPresented: $showAddRoutineSheet) {
+                    RoutineCreatorView()
+                }
                 .fullScreenCover(isPresented: Bindable(viewModel).isWorkoutExpanded) {
                     NavigationStack {
                         ZStack {
@@ -77,6 +79,93 @@ struct WorkoutRecorderView: View {
                                 }
                             }
                         }
+                        .sheet(isPresented: Bindable(viewModel).showExercisePicker) {
+                            ExercisePickerView { exercise in
+                                viewModel.addExercise(exercise)
+                            }
+                        }
+                        .sheet(isPresented: Bindable(viewModel).showRestTimerPicker) {
+                            // 休憩タイマー設定シート
+                            RestTimerPickerSheet(duration: Bindable(viewModel).restTimerDuration)
+                                .presentationDetents([.height(300)])
+                        }
+                        .sheet(isPresented: $showReorderSheet) {
+                            ExerciseReorderView(exercises: Bindable(viewModel).selectedExercises)
+                        }
+                        .sheet(isPresented: $showExerciseMenu) {
+                            // 種目メニューシート（ハーフモーダル）
+                            VStack(spacing: 0) {
+                                Text("種目メニュー")
+                                    .font(.headline)
+                                    .padding(.top)
+                                    .padding(.bottom, 20)
+                                
+                                VStack(spacing: 0) {
+                                    Button(action: {
+                                        showExerciseMenu = false
+                                        // シートが閉じてから次のシートを開くために少し遅延させる
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                            showReorderSheet = true
+                                        }
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "arrow.up.arrow.down")
+                                                .frame(width: 24)
+                                                Text("並び替え・削除")
+                                                Spacer()
+                                        }
+                                        .padding()
+                                        .foregroundColor(.primary)
+                                    }
+                                    
+                                    Divider()
+                                        .padding(.leading)
+                                    
+                                    if let exercise = activeExerciseForMenu {
+                                        Button(action: {
+                                            withAnimation {
+                                                viewModel.removeExercise(exercise)
+                                            }
+                                            showExerciseMenu = false
+                                        }) {
+                                            HStack {
+                                                Image(systemName: "trash")
+                                                .frame(width: 24)
+                                                Text("この種目を削除")
+                                                Spacer()
+                                            }
+                                            .padding()
+                                            .foregroundColor(.red)
+                                        }
+                                    }
+                                }
+                                .background(Color(.secondarySystemGroupedBackground))
+                                .cornerRadius(12)
+                                .padding(.horizontal)
+                                
+                                Button(action: {
+                                    showExerciseMenu = false
+                                }) {
+                                    Text("キャンセル")
+                                        .font(.headline)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color(.systemGray5))
+                                        .foregroundColor(.primary)
+                                        .cornerRadius(12)
+                                }
+                                .padding()
+                            }
+                            .presentationDetents([.height(250)])
+                            .presentationDragIndicator(.visible)
+                            .background(Color(.systemGroupedBackground))
+                        }
+                        .confirmationDialog("トレーニングを中止しますか？", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
+                            Button("中止する", role: .destructive) {
+                                viewModel.cancelWorkout()
+                            }
+                            Button("続ける", role: .cancel) {}
+                        }
                     }
                 }
         }
@@ -112,26 +201,25 @@ struct WorkoutRecorderView: View {
             Spacer()
             
             // ルーティンリスト（ボタンの上に表示）
-            if !routines.isEmpty {
+            if !viewModel.savedRoutines.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("マイ・ルーティン")
                         .font(.headline)
                         .padding(.horizontal)
                     
                     VStack(spacing: 12) {
-                        ForEach(routines, id: \.self) { routine in
+                        ForEach(viewModel.savedRoutines) { routine in
                             Button(action: {
-                                // ルーティン開始処理（仮）
-                                viewModel.startWorkout()
+                                viewModel.startWorkout(from: routine)
                             }) {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(routine)
+                                        Text(routine.name)
                                             .font(.subheadline)
                                             .fontWeight(.semibold)
                                             .foregroundColor(.primary)
                                         
-                                        Text("5種目 • 45分")
+                                        Text("\(routine.exercises.count)種目")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                     }

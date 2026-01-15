@@ -8,7 +8,7 @@
 import Foundation
 
 /// 筋肉グループ
-enum MuscleGroup: String, CaseIterable, Identifiable {
+enum MuscleGroup: String, CaseIterable, Identifiable, Codable {
     case chest = "胸"
     case back = "背中"
     case legs = "脚"
@@ -34,7 +34,7 @@ enum MuscleGroup: String, CaseIterable, Identifiable {
 }
 
 /// エクササイズ（種目）モデル
-struct Exercise: Identifiable, Hashable {
+struct Exercise: Identifiable, Hashable, Codable {
     let id: UUID
     let nameJa: String
     let muscleGroup: MuscleGroup

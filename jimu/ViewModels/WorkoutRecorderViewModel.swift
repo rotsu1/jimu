@@ -24,14 +24,37 @@ final class WorkoutRecorderViewModel {
     // MARK: - Rest Timer
     var restTimerSeconds: Int = 0
     var isRestTimerActive: Bool = false
-    var restTimerDuration: Int = 60 // デフォルト60秒
+    private var defaultRestTimerDuration: Int = 60 // デフォルト60秒
     private var restTimer: Timer?
     var showRestTimerPicker: Bool = false
     var activeExerciseIdForRestTimer: UUID?
     
+    // Exercise ID -> Rest Duration (Seconds)
+    var exerciseRestDurations: [UUID: Int] = [:]
+    
+    // UI binding for picker
+    var restTimerDuration: Int {
+        get {
+            if let exerciseId = activeExerciseIdForRestTimer, let duration = exerciseRestDurations[exerciseId] {
+                return duration
+            }
+            return defaultRestTimerDuration
+        }
+        set {
+            if let exerciseId = activeExerciseIdForRestTimer {
+                exerciseRestDurations[exerciseId] = newValue
+            } else {
+                defaultRestTimerDuration = newValue
+            }
+        }
+    }
+    
     // MARK: - Exercise & Sets
     var selectedExercises: [Exercise] = []
     var workoutSets: [UUID: [WorkoutSet]] = [:] // exerciseId -> sets
+    
+    // MARK: - Routines
+    var savedRoutines: [Routine] = []
     
     // MARK: - Sheet State
     var showExercisePicker = false
@@ -63,11 +86,48 @@ final class WorkoutRecorderViewModel {
     // MARK: - Workout Control
     
     func startWorkout() {
+        startWorkoutInternal()
+    }
+    
+    func startWorkout(from routine: Routine) {
+        startWorkoutInternal()
+        
+        // Load routine data
+        for routineExercise in routine.exercises {
+            addExercise(routineExercise.exercise)
+            
+            // Set rest duration
+            exerciseRestDurations[routineExercise.exercise.id] = routineExercise.restDuration
+            
+            // Override the default initial set with routine sets
+            // Remove the default set first (addExercise adds one)
+            // Actually, addExercise adds one set. We should clear it and add routine sets.
+            if var sets = workoutSets[routineExercise.exercise.id] {
+                sets.removeAll()
+                
+                for (index, templateSet) in routineExercise.sets.enumerated() {
+                    let newSet = WorkoutSet(
+                        workoutId: currentWorkout!.id,
+                        exerciseId: routineExercise.exercise.id,
+                        weight: templateSet.weight,
+                        reps: templateSet.reps,
+                        setNumber: index + 1,
+                        isCompleted: false
+                    )
+                    sets.append(newSet)
+                }
+                workoutSets[routineExercise.exercise.id] = sets
+            }
+        }
+    }
+    
+    private func startWorkoutInternal() {
         isWorkoutActive = true
         isWorkoutExpanded = true // 開始時は展開する
         elapsedSeconds = 0
         selectedExercises = []
         workoutSets = [:]
+        exerciseRestDurations = [:] // Reset rest durations
         
         currentWorkout = Workout(
             userId: MockData.shared.currentUser.id,
@@ -101,6 +161,7 @@ final class WorkoutRecorderViewModel {
         elapsedSeconds = 0
         selectedExercises = []
         workoutSets = [:]
+        exerciseRestDurations = [:]
         currentWorkout = nil
     }
     
@@ -120,10 +181,14 @@ final class WorkoutRecorderViewModel {
     // MARK: - Rest Timer Logic
     
     func startRestTimer() {
+        startRestTimer(duration: defaultRestTimerDuration)
+    }
+    
+    func startRestTimer(duration: Int) {
         // 既存のタイマーがあれば停止
         stopRestTimer()
         
-        restTimerSeconds = restTimerDuration
+        restTimerSeconds = duration
         isRestTimerActive = true
         
         restTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -150,11 +215,14 @@ final class WorkoutRecorderViewModel {
     }
     
     var formattedRestDuration: String {
-        if restTimerDuration == 0 {
+        // Use active exercise duration if available
+        let duration = restTimerDuration
+        
+        if duration == 0 {
             return "なし"
         }
-        let minutes = restTimerDuration / 60
-        let seconds = restTimerDuration % 60
+        let minutes = duration / 60
+        let seconds = duration % 60
         if minutes > 0 {
             if seconds > 0 {
                 return "\(minutes)分\(seconds)秒"
@@ -172,6 +240,11 @@ final class WorkoutRecorderViewModel {
         guard !selectedExercises.contains(where: { $0.id == exercise.id }) else { return }
         selectedExercises.append(exercise)
         
+        // Set default rest duration for new exercise if not already set
+        if exerciseRestDurations[exercise.id] == nil {
+            exerciseRestDurations[exercise.id] = defaultRestTimerDuration
+        }
+        
         // 初期セットを追加
         addSet(for: exercise.id)
     }
@@ -179,6 +252,7 @@ final class WorkoutRecorderViewModel {
     func removeExercise(_ exercise: Exercise) {
         selectedExercises.removeAll { $0.id == exercise.id }
         workoutSets.removeValue(forKey: exercise.id)
+        exerciseRestDurations.removeValue(forKey: exercise.id)
     }
     
     // MARK: - Set Management
@@ -230,8 +304,11 @@ final class WorkoutRecorderViewModel {
             sets[index].isCompleted = isCompleted
             // セット完了時に休憩タイマーを開始（完了になった場合のみ）
             // かつ、タイマー時間が設定されている場合（0秒以外）
-            if isCompleted && restTimerDuration > 0 {
-                startRestTimer()
+            if isCompleted {
+                let duration = exerciseRestDurations[exerciseId] ?? defaultRestTimerDuration
+                if duration > 0 {
+                    startRestTimer(duration: duration)
+                }
             }
         }
         
