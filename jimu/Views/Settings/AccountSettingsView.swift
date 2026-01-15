@@ -9,43 +9,25 @@ import SwiftUI
 
 struct AccountSettingsView: View {
     @State private var username: String = "Ryunosuke"
-    @State private var email: String = "ryu@example.com"
-    @State private var isGoogleLinked = false
-    @State private var isAppleLinked = true
     @State private var showDeleteAlert = false
+    @AppStorage("isFaceIDEnabled") private var isFaceIDEnabled = false
     
     var body: some View {
         List {
             Section(header: Text("プロフィール情報")) {
-                HStack {
-                    Text("ユーザー名")
-                    Spacer()
-                    TextField("ユーザー名", text: $username)
-                        .multilineTextAlignment(.trailing)
-                }
-                
-                HStack {
-                    Text("メールアドレス")
-                    Spacer()
-                    TextField("メールアドレス", text: $email)
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.emailAddress)
+                NavigationLink(destination: EditUsernameView(username: $username)) {
+                    HStack {
+                        Text("ユーザー名")
+                        Spacer()
+                        Text(username)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
             
             Section(header: Text("セキュリティ")) {
-                NavigationLink("パスワード変更") {
-                    Text("パスワード変更画面") // TODO: Implement password change view
-                }
-            }
-            
-            Section(header: Text("外部アカウント連携")) {
-                Toggle(isOn: $isGoogleLinked) {
-                    Label("Google", systemImage: "g.circle")
-                }
-                
-                Toggle(isOn: $isAppleLinked) {
-                    Label("Apple", systemImage: "apple.logo")
+                Toggle(isOn: $isFaceIDEnabled) {
+                    Label("Face IDでログイン", systemImage: "faceid")
                 }
             }
             
