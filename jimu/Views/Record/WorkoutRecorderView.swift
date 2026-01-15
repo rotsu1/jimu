@@ -15,7 +15,7 @@ struct WorkoutRecorderView: View {
     @State private var showAddRoutineSheet = false // 追加
     @State private var showExerciseMenu = false // 追加
     @State private var showReorderSheet = false // 追加
-    @State private var activeExerciseForMenu: Exercise? // 追加
+    @State private var activeExerciseForMenu: WorkoutSessionExercise? // 追加
     
     // プレビュー用イニシャライザ（Bindingを使わない場合用）
     init(selectedTab: Binding<MainTabView.Tab>? = nil) {
@@ -123,10 +123,10 @@ struct WorkoutRecorderView: View {
                                     Divider()
                                         .padding(.leading)
                                     
-                                    if let exercise = activeExerciseForMenu {
+                                    if let sessionExercise = activeExerciseForMenu {
                                         Button(action: {
                                             withAnimation {
-                                                viewModel.removeExercise(exercise)
+                                                viewModel.removeExercise(sessionExercise)
                                             }
                                             showExerciseMenu = false
                                         }) {
@@ -180,14 +180,14 @@ struct WorkoutRecorderView: View {
             // Header (Fixed)
             VStack(spacing: 16) {
                 Image(systemName: "dumbbell.fill")
-                    .font(.system(size: 80))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.green, .mint],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                .font(.system(size: 80))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.green, .mint],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
+                )
                 
                 Text("トレーニングを始めよう")
                     .font(.title2)
@@ -331,18 +331,16 @@ struct WorkoutRecorderView: View {
                 viewModel.stopRestTimer()
             }) {
                 Image(systemName: "xmark")
-                    .foregroundColor(.white)
-                    .padding(8)
-                    .background(Color.white.opacity(0.2))
-                    .clipShape(Circle())
+                .foregroundColor(.white)
+                .padding(8)
+                .background(Color.white.opacity(0.2))
+                .clipShape(Circle())
             }
         }
         .padding()
         .background(Color.orange)
         .transition(.move(edge: .top))
     }
-    
-    // stopwatchHeaderは削除（ナビゲーションバーに移動したため）
     
     private var emptyExerciseView: some View {
         VStack(spacing: 20) {
@@ -373,9 +371,9 @@ struct WorkoutRecorderView: View {
     
     private var exerciseList: some View {
         List {
-            ForEach(viewModel.selectedExercises) { exercise in
+            ForEach(viewModel.selectedExercises) { sessionExercise in
                 Section {
-                    ForEach(Array(viewModel.sets(for: exercise.id).enumerated()), id: \.element.id) { index, set in
+                    ForEach(Array(viewModel.sets(for: sessionExercise.id).enumerated()), id: \.element.id) { index, set in
                         SetInputRowView(
                             setNumber: set.setNumber,
                             weight: set.weight,
@@ -384,13 +382,13 @@ struct WorkoutRecorderView: View {
                             previousWeight: nil, // TODO: 実際の前回の値を取得して渡す
                             previousReps: nil,   // TODO: 実際の前回の値を取得して渡す
                             onWeightChange: { weight in
-                                viewModel.updateSet(for: exercise.id, at: index, weight: weight)
+                                viewModel.updateSet(for: sessionExercise.id, at: index, weight: weight)
                             },
                             onRepsChange: { reps in
-                                viewModel.updateSet(for: exercise.id, at: index, reps: reps)
+                                viewModel.updateSet(for: sessionExercise.id, at: index, reps: reps)
                             },
                             onCompletedChange: { completed in
-                                viewModel.updateSet(for: exercise.id, at: index, isCompleted: completed)
+                                viewModel.updateSet(for: sessionExercise.id, at: index, isCompleted: completed)
                             },
                             onDelete: {
                                 // SetInputRowView内のonDeleteは使用しない（swipeActionsで削除するため）
@@ -400,7 +398,7 @@ struct WorkoutRecorderView: View {
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 withAnimation {
-                                    viewModel.removeSet(for: exercise.id, at: index)
+                                    viewModel.removeSet(for: sessionExercise.id, at: index)
                                 }
                             } label: {
                                 Label("削除", systemImage: "trash")
@@ -410,7 +408,7 @@ struct WorkoutRecorderView: View {
                     
                     // セット追加ボタン
                     Button(action: {
-                        viewModel.addSet(for: exercise.id)
+                        viewModel.addSet(for: sessionExercise.id)
                     }) {
                         HStack {
                             Image(systemName: "plus.circle")
@@ -426,17 +424,17 @@ struct WorkoutRecorderView: View {
                         // 種目ヘッダー
                         VStack {
                             HStack {
-                                Image(systemName: exercise.muscleGroup.iconName)
+                                Image(systemName: sessionExercise.exercise.muscleGroup.iconName)
                                     .foregroundColor(.green)
                                     .font(.title3)
                                 
-                                Text(exercise.nameJa)
+                                Text(sessionExercise.exercise.nameJa)
                                     .font(.headline)
                                     .foregroundColor(.primary)
                                 
                                 Spacer()
                                 
-                                Text(exercise.muscleGroup.rawValue)
+                                Text(sessionExercise.exercise.muscleGroup.rawValue)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .padding(.horizontal, 8)
@@ -445,7 +443,7 @@ struct WorkoutRecorderView: View {
                                     .cornerRadius(8)
                                 
                                 Button(action: {
-                                    activeExerciseForMenu = exercise
+                                    activeExerciseForMenu = sessionExercise
                                     showExerciseMenu = true
                                 }) {
                                     Image(systemName: "ellipsis")
@@ -458,7 +456,7 @@ struct WorkoutRecorderView: View {
                             
                             // 休憩タイマー設定ボタン
                             Button(action: {
-                                viewModel.activeExerciseIdForRestTimer = exercise.id
+                                viewModel.activeExerciseIdForRestTimer = sessionExercise.id
                                 viewModel.showRestTimerPicker = true
                             }) {
                                 HStack(spacing: 4) {
@@ -508,9 +506,6 @@ struct WorkoutRecorderView: View {
         }
         .listStyle(.insetGrouped)
     }
-    
-    // exerciseCard関数は不要になったため削除
-    // (exerciseList内でSectionを使って直接構築しているため)
     
     private var bottomButtons: some View {
         VStack(spacing: 12) {
@@ -607,4 +602,3 @@ struct WorkoutRecorderView: View {
         .preferredColorScheme(.dark)
         .environment(WorkoutRecorderViewModel())
 }
-

@@ -8,6 +8,17 @@
 import Foundation
 import SwiftUI
 
+/// ワークアウトセッション中の種目管理用モデル
+struct WorkoutSessionExercise: Identifiable, Equatable {
+    let id: UUID
+    let exercise: Exercise
+    
+    init(id: UUID = UUID(), exercise: Exercise) {
+        self.id = id
+        self.exercise = exercise
+    }
+}
+
 /// ワークアウト記録画面のViewModel
 @Observable
 final class WorkoutRecorderViewModel {
@@ -29,20 +40,20 @@ final class WorkoutRecorderViewModel {
     var showRestTimerPicker: Bool = false
     var activeExerciseIdForRestTimer: UUID?
     
-    // Exercise ID -> Rest Duration (Seconds)
+    // SessionExercise ID -> Rest Duration (Seconds)
     var exerciseRestDurations: [UUID: Int] = [:]
     
     // UI binding for picker
     var restTimerDuration: Int {
         get {
-            if let exerciseId = activeExerciseIdForRestTimer, let duration = exerciseRestDurations[exerciseId] {
+            if let sessionId = activeExerciseIdForRestTimer, let duration = exerciseRestDurations[sessionId] {
                 return duration
             }
             return defaultRestTimerDuration
         }
         set {
-            if let exerciseId = activeExerciseIdForRestTimer {
-                exerciseRestDurations[exerciseId] = newValue
+            if let sessionId = activeExerciseIdForRestTimer {
+                exerciseRestDurations[sessionId] = newValue
             } else {
                 defaultRestTimerDuration = newValue
             }
@@ -50,8 +61,8 @@ final class WorkoutRecorderViewModel {
     }
     
     // MARK: - Exercise & Sets
-    var selectedExercises: [Exercise] = []
-    var workoutSets: [UUID: [WorkoutSet]] = [:] // exerciseId -> sets
+    var selectedExercises: [WorkoutSessionExercise] = []
+    var workoutSets: [UUID: [WorkoutSet]] = [:] // SessionExercise ID -> sets
     
     // MARK: - Routines
     var savedRoutines: [Routine] = []
@@ -94,30 +105,27 @@ final class WorkoutRecorderViewModel {
         
         // Load routine data
         for routineExercise in routine.exercises {
-            addExercise(routineExercise.exercise)
+            // Add as new session exercise
+            let sessionExercise = WorkoutSessionExercise(exercise: routineExercise.exercise)
+            selectedExercises.append(sessionExercise)
             
             // Set rest duration
-            exerciseRestDurations[routineExercise.exercise.id] = routineExercise.restDuration
+            exerciseRestDurations[sessionExercise.id] = routineExercise.restDuration
             
-            // Override the default initial set with routine sets
-            // Remove the default set first (addExercise adds one)
-            // Actually, addExercise adds one set. We should clear it and add routine sets.
-            if var sets = workoutSets[routineExercise.exercise.id] {
-                sets.removeAll()
-                
-                for (index, templateSet) in routineExercise.sets.enumerated() {
-                    let newSet = WorkoutSet(
-                        workoutId: currentWorkout!.id,
-                        exerciseId: routineExercise.exercise.id,
-                        weight: templateSet.weight,
-                        reps: templateSet.reps,
-                        setNumber: index + 1,
-                        isCompleted: false
-                    )
-                    sets.append(newSet)
-                }
-                workoutSets[routineExercise.exercise.id] = sets
+            // Add routine sets
+            var sets: [WorkoutSet] = []
+            for (index, templateSet) in routineExercise.sets.enumerated() {
+                let newSet = WorkoutSet(
+                    workoutId: currentWorkout!.id,
+                    exerciseId: routineExercise.exercise.id,
+                    weight: templateSet.weight,
+                    reps: templateSet.reps,
+                    setNumber: index + 1,
+                    isCompleted: false
+                )
+                sets.append(newSet)
             }
+            workoutSets[sessionExercise.id] = sets
         }
     }
     
@@ -237,30 +245,33 @@ final class WorkoutRecorderViewModel {
     // MARK: - Exercise Management
     
     func addExercise(_ exercise: Exercise) {
-        guard !selectedExercises.contains(where: { $0.id == exercise.id }) else { return }
-        selectedExercises.append(exercise)
+        // Always allow adding, creates a new session exercise wrapper
+        let sessionExercise = WorkoutSessionExercise(exercise: exercise)
+        selectedExercises.append(sessionExercise)
         
         // Set default rest duration for new exercise if not already set
-        if exerciseRestDurations[exercise.id] == nil {
-            exerciseRestDurations[exercise.id] = defaultRestTimerDuration
-        }
+        // Note: Using the session ID as key, so each instance can have own timer
+        exerciseRestDurations[sessionExercise.id] = defaultRestTimerDuration
         
         // 初期セットを追加
-        addSet(for: exercise.id)
+        addSet(for: sessionExercise.id)
     }
     
-    func removeExercise(_ exercise: Exercise) {
-        selectedExercises.removeAll { $0.id == exercise.id }
-        workoutSets.removeValue(forKey: exercise.id)
-        exerciseRestDurations.removeValue(forKey: exercise.id)
+    func removeExercise(_ sessionExercise: WorkoutSessionExercise) {
+        selectedExercises.removeAll { $0.id == sessionExercise.id }
+        workoutSets.removeValue(forKey: sessionExercise.id)
+        exerciseRestDurations.removeValue(forKey: sessionExercise.id)
     }
     
     // MARK: - Set Management
     
-    func addSet(for exerciseId: UUID) {
+    /// Adds a set for the given SessionExercise ID
+    func addSet(for sessionId: UUID) {
         guard let workoutId = currentWorkout?.id else { return }
+        // We need the original exercise ID for the WorkoutSet model
+        guard let sessionExercise = selectedExercises.first(where: { $0.id == sessionId }) else { return }
         
-        var sets = workoutSets[exerciseId] ?? []
+        var sets = workoutSets[sessionId] ?? []
         let setNumber = sets.count + 1
         
         // 前回のセットの値をコピー（あれば）
@@ -268,7 +279,7 @@ final class WorkoutRecorderViewModel {
         
         let newSet = WorkoutSet(
             workoutId: workoutId,
-            exerciseId: exerciseId,
+            exerciseId: sessionExercise.exercise.id, // Store actual Exercise ID
             weight: previousSet?.weight ?? 0,
             reps: previousSet?.reps ?? 10,
             setNumber: setNumber,
@@ -276,11 +287,11 @@ final class WorkoutRecorderViewModel {
         )
         
         sets.append(newSet)
-        workoutSets[exerciseId] = sets
+        workoutSets[sessionId] = sets
     }
     
-    func removeSet(for exerciseId: UUID, at index: Int) {
-        guard var sets = workoutSets[exerciseId], index < sets.count else { return }
+    func removeSet(for sessionId: UUID, at index: Int) {
+        guard var sets = workoutSets[sessionId], index < sets.count else { return }
         sets.remove(at: index)
         
         // セット番号を再割り当て
@@ -288,11 +299,11 @@ final class WorkoutRecorderViewModel {
             sets[i].setNumber = i + 1
         }
         
-        workoutSets[exerciseId] = sets
+        workoutSets[sessionId] = sets
     }
     
-    func updateSet(for exerciseId: UUID, at index: Int, weight: Double? = nil, reps: Int? = nil, isCompleted: Bool? = nil) {
-        guard var sets = workoutSets[exerciseId], index < sets.count else { return }
+    func updateSet(for sessionId: UUID, at index: Int, weight: Double? = nil, reps: Int? = nil, isCompleted: Bool? = nil) {
+        guard var sets = workoutSets[sessionId], index < sets.count else { return }
         
         if let weight = weight {
             sets[index].weight = weight
@@ -305,17 +316,17 @@ final class WorkoutRecorderViewModel {
             // セット完了時に休憩タイマーを開始（完了になった場合のみ）
             // かつ、タイマー時間が設定されている場合（0秒以外）
             if isCompleted {
-                let duration = exerciseRestDurations[exerciseId] ?? defaultRestTimerDuration
+                let duration = exerciseRestDurations[sessionId] ?? defaultRestTimerDuration
                 if duration > 0 {
                     startRestTimer(duration: duration)
                 }
             }
         }
         
-        workoutSets[exerciseId] = sets
+        workoutSets[sessionId] = sets
     }
     
-    func sets(for exerciseId: UUID) -> [WorkoutSet] {
-        workoutSets[exerciseId] ?? []
+    func sets(for sessionId: UUID) -> [WorkoutSet] {
+        workoutSets[sessionId] ?? []
     }
 }

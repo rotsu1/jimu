@@ -8,18 +8,18 @@
 import SwiftUI
 
 struct ExerciseReorderView: View {
-    @Binding var exercises: [Exercise]
+    @Binding var exercises: [WorkoutSessionExercise]
     @Environment(\.dismiss) private var dismiss
     @State private var editMode: EditMode = .active
     
     var body: some View {
         NavigationStack {
             List {
-                ForEach(exercises) { exercise in
+                ForEach(exercises) { sessionExercise in
                     HStack {
-                        Image(systemName: exercise.muscleGroup.iconName)
+                        Image(systemName: sessionExercise.exercise.muscleGroup.iconName)
                             .foregroundColor(.green)
-                        Text(exercise.nameJa)
+                        Text(sessionExercise.exercise.nameJa)
                             .font(.headline)
                         Spacer()
                     }
@@ -51,8 +51,7 @@ struct ExerciseReorderView: View {
 
 #Preview {
     ExerciseReorderView(exercises: .constant([
-        MockData.shared.exercises[0],
-        MockData.shared.exercises[1]
+        WorkoutSessionExercise(exercise: MockData.shared.exercises[0]),
+        WorkoutSessionExercise(exercise: MockData.shared.exercises[1])
     ]))
 }
-

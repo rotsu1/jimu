@@ -33,13 +33,66 @@ enum MuscleGroup: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+/// トレーニング器具
+enum ExerciseTool: String, CaseIterable, Identifiable, Codable {
+    case barbell = "バーベル"
+    case dumbbell = "ダンベル"
+    case machine = "マシン"
+    case bodyweight = "自重"
+    case cable = "ケーブル"
+    case kettlebell = "ケトルベル"
+    case band = "バンド"
+    case smithMachine = "スミスマシン"
+    case other = "その他"
+    
+    var id: String { rawValue }
+    
+    var iconName: String {
+        switch self {
+        case .barbell: return "dumbbell" // SF Symbols doesn't have a perfect barbell, using dumbbell or similar
+        case .dumbbell: return "dumbbell.fill"
+        case .machine: return "gearshape.2"
+        case .bodyweight: return "figure.stand"
+        case .cable: return "arrow.triangle.2.circlepath"
+        case .kettlebell: return "scalemass.fill"
+        case .band: return "scribble.variable"
+        case .smithMachine: return "building.columns"
+        case .other: return "questionmark.circle"
+        }
+    }
+}
+
 /// エクササイズ（種目）モデル
 struct Exercise: Identifiable, Hashable, Codable {
     let id: UUID
     let nameJa: String
-    let muscleGroup: MuscleGroup
+    var muscleGroups: [MuscleGroup]
+    var tools: [ExerciseTool]
     let gifUrl: String?
+    let customImageData: Data?
     
+    // 互換性のための計算プロパティ
+    var muscleGroup: MuscleGroup {
+        return muscleGroups.first ?? .chest
+    }
+    
+    init(
+        id: UUID = UUID(),
+        nameJa: String,
+        muscleGroups: [MuscleGroup],
+        tools: [ExerciseTool] = [],
+        gifUrl: String? = nil,
+        customImageData: Data? = nil
+    ) {
+        self.id = id
+        self.nameJa = nameJa
+        self.muscleGroups = muscleGroups
+        self.tools = tools
+        self.gifUrl = gifUrl
+        self.customImageData = customImageData
+    }
+    
+    // 旧イニシャライザの互換性維持
     init(
         id: UUID = UUID(),
         nameJa: String,
@@ -48,7 +101,9 @@ struct Exercise: Identifiable, Hashable, Codable {
     ) {
         self.id = id
         self.nameJa = nameJa
-        self.muscleGroup = muscleGroup
+        self.muscleGroups = [muscleGroup]
+        self.tools = []
         self.gifUrl = gifUrl
+        self.customImageData = nil
     }
 }

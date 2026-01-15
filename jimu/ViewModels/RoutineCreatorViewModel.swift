@@ -55,9 +55,7 @@ class RoutineCreatorViewModel {
     // MARK: - Exercise Management
     
     func addExercise(_ exercise: Exercise) {
-        // Allow duplicates? Usually routines don't have duplicate exercises, but let's prevent for now to match recorder
-        guard !selectedExercises.contains(where: { $0.exercise.id == exercise.id }) else { return }
-        
+        // Allow duplicates
         let newRoutineExercise = RoutineExercise(
             exercise: exercise,
             sets: [RoutineSetTemplate(weight: 20, reps: 10)], // Default set

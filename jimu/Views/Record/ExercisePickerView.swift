@@ -12,16 +12,18 @@ struct ExercisePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var selectedMuscleGroup: MuscleGroup?
+    @State private var showCreateExercise = false
+    @State private var allExercises: [Exercise] = []
     
     @State private var selectedExercises: [Exercise] = []
     
     let onSelect: ([Exercise]) -> Void
     
     private var filteredExercises: [Exercise] {
-        var exercises = MockData.shared.exercises
+        var exercises = allExercises
         
         if let muscleGroup = selectedMuscleGroup {
-            exercises = exercises.filter { $0.muscleGroup == muscleGroup }
+            exercises = exercises.filter { $0.muscleGroups.contains(muscleGroup) }
         }
         
         if !searchText.isEmpty {
@@ -44,19 +46,38 @@ struct ExercisePickerView: View {
                             toggleSelection(exercise)
                         }) {
                             HStack(spacing: 12) {
-                                Image(systemName: exercise.muscleGroup.iconName)
-                                    .foregroundColor(.green)
-                                    .font(.title3)
-                                    .frame(width: 32)
+                                if let imageData = exercise.customImageData, let uiImage = UIImage(data: imageData) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 32, height: 32)
+                                        .clipShape(Circle())
+                                } else {
+                                    Image(systemName: exercise.muscleGroup.iconName)
+                                        .foregroundColor(.green)
+                                        .font(.title3)
+                                        .frame(width: 32)
+                                }
                                 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(exercise.nameJa)
                                         .font(.body)
                                         .foregroundColor(.primary)
                                     
-                                    Text(exercise.muscleGroup.rawValue)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                    HStack(spacing: 4) {
+                                        Text(exercise.muscleGroups.map(\.rawValue).joined(separator: ", "))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        
+                                        if !exercise.tools.isEmpty {
+                                            Text("•")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            Text(exercise.tools.map(\.rawValue).joined(separator: ", "))
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
                                 }
                                 
                                 Spacer()
@@ -108,6 +129,17 @@ struct ExercisePickerView: View {
             .navigationTitle("種目を選択")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        showCreateExercise = true
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus")
+                            Text("種目を追加")
+                        }
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("閉じる") {
                         dismiss()
@@ -115,6 +147,18 @@ struct ExercisePickerView: View {
                 }
             }
             .searchable(text: $searchText, prompt: "種目を検索")
+            .sheet(isPresented: $showCreateExercise) {
+                CreateExerciseView { newExercise in
+                    allExercises.append(newExercise)
+                    MockData.shared.exercises.append(newExercise)
+                    toggleSelection(newExercise) // Automatically select the new exercise
+                }
+            }
+            .onAppear {
+                if allExercises.isEmpty {
+                    allExercises = MockData.shared.exercises
+                }
+            }
         }
     }
     
