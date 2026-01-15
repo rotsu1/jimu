@@ -18,7 +18,7 @@ struct ProfileView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     // プロフィールヘッダー
-                    ProfileHeaderView(user: user)
+                    ProfileHeaderView(user: $user)
                     
                     // 統計カード
                     statsSection

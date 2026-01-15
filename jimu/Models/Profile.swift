@@ -12,6 +12,8 @@ struct Profile: Identifiable, Hashable {
     let id: UUID
     var username: String
     var bio: String
+    var location: String
+    var birthDate: Date
     var isPrivate: Bool
     var isPremium: Bool
     var avatarUrl: String?
@@ -20,6 +22,8 @@ struct Profile: Identifiable, Hashable {
         id: UUID = UUID(),
         username: String,
         bio: String = "",
+        location: String = "",
+        birthDate: Date = Date(),
         isPrivate: Bool = false,
         isPremium: Bool = false,
         avatarUrl: String? = nil
@@ -27,6 +31,8 @@ struct Profile: Identifiable, Hashable {
         self.id = id
         self.username = username
         self.bio = bio
+        self.location = location
+        self.birthDate = birthDate
         self.isPrivate = isPrivate
         self.isPremium = isPremium
         self.avatarUrl = avatarUrl

@@ -9,7 +9,8 @@ import SwiftUI
 
 /// プロフィールヘッダー
 struct ProfileHeaderView: View {
-    let user: Profile
+    @Binding var user: Profile
+    @State private var showEditProfile = false
     
     var body: some View {
         VStack(spacing: 16) {
@@ -77,7 +78,9 @@ struct ProfileHeaderView: View {
             }
             
             // 編集ボタン
-            Button(action: {}) {
+            Button(action: {
+                showEditProfile = true
+            }) {
                 Text("プロフィールを編集")
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -89,10 +92,13 @@ struct ProfileHeaderView: View {
             }
         }
         .padding(.vertical, 8)
+        .fullScreenCover(isPresented: $showEditProfile) {
+            EditProfileView(user: $user)
+        }
     }
 }
 
 #Preview {
-    ProfileHeaderView(user: MockData.shared.currentUser)
+    ProfileHeaderView(user: .constant(MockData.shared.currentUser))
         .preferredColorScheme(.dark)
 }
