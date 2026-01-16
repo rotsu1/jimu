@@ -86,11 +86,11 @@ struct ProfileView: View {
             )
             
             StatCard(
-                title: "合計",
-                value: "\(totalWorkouts)",
-                unit: "回",
-                icon: "trophy.fill",
-                color: .yellow
+                title: "今日",
+                value: "\(burnedCaloriesToday)",
+                unit: "kcal",
+                icon: "flame.fill",
+                color: .red
             )
         }
         .padding(.horizontal)
@@ -108,8 +108,14 @@ struct ProfileView: View {
         return Int.random(in: 3...14)
     }
     
-    private var totalWorkouts: Int {
-        contributionData.count
+    private var burnedCaloriesToday: Int {
+        // 今日のワークアウトから消費カロリーを計算（ダミー）
+        let calendar = Calendar.current
+        let todayWorkouts = workouts.filter { calendar.isDateInToday($0.startedAt) }
+        
+        // 各ワークアウトの時間に基づいてカロリーを推定（1分あたり約8kcal）
+        let totalMinutes = todayWorkouts.reduce(0) { $0 + $1.durationMinutes }
+        return totalMinutes * 8
     }
     
     // MARK: - Workout History
