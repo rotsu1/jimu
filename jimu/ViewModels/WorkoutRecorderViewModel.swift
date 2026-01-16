@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import PhotosUI
 
 /// ワークアウトセッション中の種目管理用モデル
 struct WorkoutSessionExercise: Identifiable, Equatable {
@@ -27,6 +28,15 @@ final class WorkoutRecorderViewModel {
     var isWorkoutExpanded = false // ワークアウト画面が展開されているか（全画面表示か）
     var showCompletionAnimation = false
     var currentWorkout: Workout?
+    
+    // MARK: - Completion Flow State
+    var showCompletionView = false
+    var completionName: String = ""
+    var defaultWorkoutName: String = "" // Added for placeholder
+    var completionComment: String = ""
+    var completionDate: Date = Date()
+    var isPrivate: Bool = false
+    var completionImages: [UIImage] = []
     
     // MARK: - Timer
     var elapsedSeconds: Int = 0
@@ -146,16 +156,67 @@ final class WorkoutRecorderViewModel {
         startTimer()
     }
     
+    // MARK: - Validation
+    var validationError: String?
+    var showValidationError = false
+    
+    /// Prepare for completion (navigate to edit page)
     func finishWorkout() {
-        stopTimer()
-        isWorkoutActive = false
-        isWorkoutExpanded = true // 完了画面は全画面で表示
-        showCompletionAnimation = true
+        // Validation
+        if selectedExercises.isEmpty {
+            validationError = "種目が追加されていません。トレーニングを記録するには少なくとも1つの種目を追加してください。"
+            showValidationError = true
+            return
+        }
         
-        currentWorkout?.endedAt = Date()
+        // Check for incomplete sets (weight=0, reps=0, or not checked)
+        // Adjust logic based on requirements:
+        // "all of the sets in each exercise is filled in"
+        // Interpretation: All sets must be marked as completed OR deleted.
+        // If the user hasn't marked a set as completed, it's considered "not filled in" for this context.
+        
+        let hasIncompleteSets = workoutSets.values.joined().contains { !$0.isCompleted }
+        
+        if hasIncompleteSets {
+            validationError = "完了していないセットがあります。すべてのセットを完了するか、不要なセットを削除してください。"
+            showValidationError = true
+            return
+        }
+        
+        stopTimer()
+        
+        // Initialize completion data
+        completionName = "" // Start blank
+        defaultWorkoutName = getDefaultWorkoutName() // Calculate default name for placeholder
+        completionComment = ""
+        completionDate = Date()
+        isPrivate = false
+        completionImages = []
+        
+        showCompletionView = true
+    }
+    
+    /// Actually save the workout and show congrats
+    func saveWorkout() {
+        showCompletionView = false // Close the edit view
+        
+        // Set default name if empty
+        if completionName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            completionName = defaultWorkoutName
+        }
+        
+        // Save logic would go here (update model, save to DB, etc.)
+        // For now just update the currentWorkout object
+        currentWorkout?.name = completionName
+        currentWorkout?.endedAt = completionDate
         currentWorkout?.status = .completed
         
-        // アニメーション後にリセット
+        // Show congrats animation
+        isWorkoutActive = false
+        isWorkoutExpanded = true // Keep expanded for congrats
+        showCompletionAnimation = true
+        
+        // After animation, reset
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
             self?.showCompletionAnimation = false
             self?.currentWorkout = nil
@@ -171,6 +232,22 @@ final class WorkoutRecorderViewModel {
         workoutSets = [:]
         exerciseRestDurations = [:]
         currentWorkout = nil
+        
+        // Reset completion state
+        showCompletionView = false
+        completionName = ""
+        completionImages = []
+    }
+    
+    private func getDefaultWorkoutName() -> String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        if hour < 12 {
+            return "Morning Workout"
+        } else if hour < 18 {
+            return "Afternoon Workout"
+        } else {
+            return "Evening Workout"
+        }
     }
     
     // MARK: - Timer

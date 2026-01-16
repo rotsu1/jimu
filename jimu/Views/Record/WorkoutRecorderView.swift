@@ -35,10 +35,14 @@ struct WorkoutRecorderView: View {
                     NavigationStack {
                         ZStack {
                             if viewModel.showCompletionAnimation {
-                                completionView
+                                WorkoutCongratsView()
                             } else {
                                 activeWorkoutView
                             }
+                        }
+                        .navigationDestination(isPresented: Bindable(viewModel).showCompletionView) {
+                            WorkoutCompletionView()
+                                .environment(viewModel)
                         }
                         .toolbar {
                             // トレーニング中のみ（完了画面以外）表示
@@ -164,6 +168,11 @@ struct WorkoutRecorderView: View {
                                 viewModel.cancelWorkout()
                             }
                             Button("続ける", role: .cancel) {}
+                        }
+                        .alert("記録できません", isPresented: Bindable(viewModel).showValidationError) {
+                            Button("OK", role: .cancel) {}
+                        } message: {
+                            Text(viewModel.validationError ?? "")
                         }
                     }
                 }
@@ -563,37 +572,7 @@ struct WorkoutRecorderView: View {
     }
     
     // MARK: - Completion View
-    
-    private var completionView: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            
-            // Lottie代用の祝福表示
-            Text("🎉")
-                .font(.system(size: 120))
-            
-            Text("お疲れ様でした！")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            
-            Text("トレーニング完了")
-                .font(.title2)
-                .foregroundColor(.secondary)
-            
-            VStack(spacing: 8) {
-                Text("トレーニング時間: \(viewModel.formattedElapsedTime)")
-                    .font(.headline)
-                
-                Text("\(viewModel.selectedExercises.count)種目 / \(viewModel.completedSetsCount)セット完了")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            .padding(.top, 16)
-            
-            Spacer()
-        }
-        .transition(.opacity.combined(with: .scale))
-    }
+    // Moved to WorkoutCongratsView.swift
 }
 
 #Preview {

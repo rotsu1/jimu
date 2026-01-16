@@ -19,6 +19,7 @@ struct Workout: Identifiable, Hashable {
     let userId: UUID
     var startedAt: Date
     var endedAt: Date?
+    var name: String? // 追加
     var note: String
     var status: WorkoutStatus
     
@@ -27,6 +28,7 @@ struct Workout: Identifiable, Hashable {
         userId: UUID,
         startedAt: Date = Date(),
         endedAt: Date? = nil,
+        name: String? = nil, // 追加
         note: String = "",
         status: WorkoutStatus = .ongoing
     ) {
@@ -34,6 +36,7 @@ struct Workout: Identifiable, Hashable {
         self.userId = userId
         self.startedAt = startedAt
         self.endedAt = endedAt
+        self.name = name
         self.note = note
         self.status = status
     }
