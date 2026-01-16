@@ -186,6 +186,15 @@ final class MockData {
                 endedAt: calendar.date(byAdding: .day, value: -7, to: now)!,
                 note: "肩トレ！サイドレイズで追い込んだ",
                 status: .completed
+            ),
+            // 大量のエクササイズと長文コメントのテスト用
+            Workout(
+                id: UUID(uuidString: "10000000-0000-0000-0000-000000000008")!,
+                userId: currentUser.id,
+                startedAt: calendar.date(byAdding: .hour, value: -12, to: now)!,
+                endedAt: calendar.date(byAdding: .hour, value: -10, to: now)!,
+                note: "今日は全身を追い込む日！\nベンチプレスから始まって、スクワット、デッドリフトのBIG3をメインに。\nそのあとは肩と腕をスーパーセットで追い込みました。\n最後は腹筋と有酸素で締め！\n久しぶりにこんなに種目数こなしたけど、意外といけるもんだな。\n明日の筋肉痛が怖いけど、良いトレーニングができた証拠！\nプロテイン飲んで早く寝よう。",
+                status: .completed
             )
         ]
     }()
@@ -206,6 +215,30 @@ final class MockData {
         let workout3 = sampleWorkouts[2]
         let workout4 = sampleWorkouts[3]
         let workout5 = sampleWorkouts[4]
+        
+        // テスト用ワークアウトのセット
+        var longWorkoutSets: [WorkoutSet] = []
+        if sampleWorkouts.count > 7 {
+            let workout8 = sampleWorkouts[7]
+            // 12種類の種目を追加
+            let exercisesToAdd = [
+                benchPress, squat, deadlift, // BIG3
+                inclineBench, dumbellFly, // 胸
+                latPulldown, // 背中
+                legPress, // 脚
+                exercises.first { $0.nameJa == "ショルダープレス" }!, // 肩
+                exercises.first { $0.nameJa == "サイドレイズ" }!,
+                exercises.first { $0.nameJa == "バーベルカール" }!, // 腕
+                exercises.first { $0.nameJa == "トライセプスプッシュダウン" }!,
+                exercises.first { $0.nameJa == "クランチ" }! // 腹筋
+            ]
+            
+            for (index, exercise) in exercisesToAdd.enumerated() {
+                longWorkoutSets.append(
+                    WorkoutSet(workoutId: workout8.id, exerciseId: exercise.id, weight: 10.0 + Double(index * 5), reps: 10, setNumber: 1, isCompleted: true)
+                )
+            }
+        }
         
         return [
             // Workout 1 (胸トレ)
@@ -239,7 +272,7 @@ final class MockData {
             WorkoutSet(workoutId: workout5.id, exerciseId: benchPress.id, weight: 70, reps: 8, setNumber: 2, isCompleted: true),
             WorkoutSet(workoutId: workout5.id, exerciseId: inclineBench.id, weight: 45, reps: 10, setNumber: 1, isCompleted: true),
             WorkoutSet(workoutId: workout5.id, exerciseId: dumbellFly.id, weight: 14, reps: 12, setNumber: 1, isCompleted: true)
-        ]
+        ] + longWorkoutSets
     }()
     
     /// 特定のワークアウトのセットを取得
@@ -346,6 +379,8 @@ final class MockData {
                 exercises: exercises,
                 images: images
             )
-        }.sorted { $0.workout.startedAt > $1.workout.startedAt }
+        }
+        .filter { !$0.sets.isEmpty } // セットがない（練習種目がない）ワークアウトは除外
+        .sorted { $0.workout.startedAt > $1.workout.startedAt }
     }()
 }

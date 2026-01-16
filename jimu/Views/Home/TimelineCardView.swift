@@ -64,6 +64,8 @@ struct TimelineCardView: View {
             if !item.workout.note.isEmpty {
                 Text(item.workout.note)
                     .font(.body)
+                    .lineLimit(4)
+                    .truncationMode(.tail)
                     .fixedSize(horizontal: false, vertical: true)
             }
             
@@ -126,7 +128,7 @@ struct TimelineCardView: View {
             
             // トレーニング内容サマリー
             VStack(alignment: .leading, spacing: 6) {
-                ForEach(groupedSets.prefix(3), id: \.exercise.id) { group in
+                ForEach(groupedSets.prefix(5), id: \.exercise.id) { group in
                     HStack(spacing: 8) {
                         Image(systemName: group.exercise.muscleGroup.iconName)
                             .foregroundColor(.green)
@@ -139,14 +141,14 @@ struct TimelineCardView: View {
                         
                         Spacer()
                         
-                        Text(group.bestSet.formattedString)
+                        Text("\(group.sets.count)セット")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
                 
-                if groupedSets.count > 3 {
-                    Text("他\(groupedSets.count - 3)種目")
+                if groupedSets.count > 5 {
+                    Text("他\(groupedSets.count - 5)種目")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.leading, 28)
@@ -165,6 +167,8 @@ struct TimelineCardView: View {
             }
         }
         .padding(16)
+        .frame(maxHeight: UIScreen.main.bounds.height * 0.66, alignment: .top)
+        .clipped()
     }
     
     private var groupedSets: [(exercise: Exercise, sets: [WorkoutSet], bestSet: WorkoutSet)] {

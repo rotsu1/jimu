@@ -17,11 +17,7 @@ struct TimelineView: View {
                 LazyVStack(spacing: 0) {
                     ForEach(timelineItems) { item in
                         NavigationLink(value: item) {
-                            if item.hasImages || item.hasNote {
-                                TimelineCardView(item: item)
-                            } else {
-                                TimelineCompactView(item: item)
-                            }
+                            TimelineCardView(item: item)
                         }
                         .buttonStyle(PlainButtonStyle())
                         
