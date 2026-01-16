@@ -10,6 +10,7 @@ import SwiftUI
 /// タイムラインカード（画像やコメント付きの投稿）
 struct TimelineCardView: View {
     let item: MockData.TimelineItem
+    @State private var currentImageIndex = 0
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -68,25 +69,44 @@ struct TimelineCardView: View {
             
             // 画像プレースホルダー（Kingfisher代用）
             if item.hasImages {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
-                        LinearGradient(
-                            colors: [.gray.opacity(0.3), .gray.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(height: 200)
-                    .overlay(
-                        VStack(spacing: 8) {
-                            Image(systemName: "photo.fill")
-                                .font(.largeTitle)
-                                .foregroundColor(.secondary)
-                            Text("ワークアウト写真")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                VStack(spacing: 8) {
+                    TabView(selection: $currentImageIndex) {
+                        ForEach(Array(item.images.enumerated()), id: \.element.id) { index, image in
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.gray.opacity(0.3), .gray.opacity(0.1)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .overlay(
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "photo.fill")
+                                            .font(.largeTitle)
+                                            .foregroundColor(.secondary)
+                                        Text("ワークアウト写真 \(index + 1)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                )
+                                .tag(index)
                         }
-                    )
+                    }
+                    .frame(height: 200)
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    
+                    if item.images.count > 1 {
+                        HStack(spacing: 6) {
+                            ForEach(0..<item.images.count, id: \.self) { index in
+                                Circle()
+                                    .fill(currentImageIndex == index ? Color.blue : Color.gray.opacity(0.3))
+                                    .frame(width: 6, height: 6)
+                            }
+                        }
+                        .padding(.bottom, 4)
+                    }
+                }
             }
             
             // トレーニング要約

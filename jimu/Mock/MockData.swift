@@ -262,6 +262,7 @@ final class MockData {
     
     lazy var sampleWorkoutImages: [WorkoutImage] = [
         WorkoutImage(workoutId: sampleWorkouts[0].id, imageUrl: "gym_photo_1"),
+        WorkoutImage(workoutId: sampleWorkouts[0].id, imageUrl: "gym_photo_1_2"), // Added second image for workout 0
         WorkoutImage(workoutId: sampleWorkouts[3].id, imageUrl: "gym_photo_2")
     ]
     
