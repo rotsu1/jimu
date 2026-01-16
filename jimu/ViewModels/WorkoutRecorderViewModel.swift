@@ -140,6 +140,7 @@ final class WorkoutRecorderViewModel {
     }
     
     private func startWorkoutInternal() {
+        stopRestTimer() // Ensure any running rest timer is stopped
         isWorkoutActive = true
         isWorkoutExpanded = true // 開始時は展開する
         elapsedSeconds = 0
@@ -199,6 +200,7 @@ final class WorkoutRecorderViewModel {
     /// Actually save the workout and show congrats
     func saveWorkout() {
         showCompletionView = false // Close the edit view
+        stopRestTimer() // Stop rest timer when saving
         
         // Set default name if empty
         if completionName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -215,16 +217,11 @@ final class WorkoutRecorderViewModel {
         isWorkoutActive = false
         isWorkoutExpanded = true // Keep expanded for congrats
         showCompletionAnimation = true
-        
-        // After animation, reset
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-            self?.showCompletionAnimation = false
-            self?.currentWorkout = nil
-        }
     }
     
     func cancelWorkout() {
         stopTimer()
+        stopRestTimer() // Stop rest timer when cancelling
         isWorkoutActive = false
         isWorkoutExpanded = false
         elapsedSeconds = 0

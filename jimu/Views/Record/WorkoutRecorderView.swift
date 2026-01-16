@@ -35,7 +35,13 @@ struct WorkoutRecorderView: View {
                     NavigationStack {
                         ZStack {
                             if viewModel.showCompletionAnimation {
-                                WorkoutCongratsView()
+                                WorkoutCongratsView {
+                                    // 完了画面のタップ時の処理
+                                    viewModel.showCompletionAnimation = false
+                                    viewModel.currentWorkout = nil
+                                    viewModel.isWorkoutExpanded = false
+                                    selectedTab = .home // ホームタブへ移動
+                                }
                             } else {
                                 activeWorkoutView
                             }
