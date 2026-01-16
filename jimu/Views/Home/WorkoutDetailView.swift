@@ -12,6 +12,11 @@ struct WorkoutDetailView: View {
     let item: MockData.TimelineItem
     @State private var currentImageIndex = 0
     
+    /// 自分の投稿かどうか
+    private var isMyWorkout: Bool {
+        item.user.id == MockData.shared.currentUser.id
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -42,6 +47,16 @@ struct WorkoutDetailView: View {
         }
         .navigationTitle("ワークアウト詳細")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if isMyWorkout {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: WorkoutEditView(item: item)) {
+                        Text("編集")
+                            .foregroundColor(.green)
+                    }
+                }
+            }
+        }
     }
     
     private var headerSection: some View {

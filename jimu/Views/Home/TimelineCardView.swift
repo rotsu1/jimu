@@ -15,6 +15,7 @@ struct TimelineCardView: View {
     @State private var showingDeleteAlert = false
     @State private var showingPrivacyAlert = false
     @State private var pendingPrivacyState = false
+    @State private var navigateToEdit = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -76,7 +77,10 @@ struct TimelineCardView: View {
                             // 編集ボタン
                             Button(action: {
                                 showingActionSheet = false
-                                // 編集アクション
+                                // シートが閉じてからナビゲーションを実行するために少し遅延させる
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                    navigateToEdit = true
+                                }
                             }) {
                                 HStack {
                                     Image(systemName: "pencil")
@@ -279,6 +283,12 @@ struct TimelineCardView: View {
         .padding(16)
         .frame(maxHeight: UIScreen.main.bounds.height * 0.66, alignment: .top)
         .clipped()
+        .background(
+            NavigationLink(destination: WorkoutEditView(item: item), isActive: $navigateToEdit) {
+                EmptyView()
+            }
+            .hidden()
+        )
     }
     
     private var groupedSets: [(exercise: Exercise, sets: [WorkoutSet], bestSet: WorkoutSet)] {

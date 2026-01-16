@@ -13,6 +13,11 @@ struct ProfileView: View {
     @State private var contributionData = MockData.shared.contributionData(for: MockData.shared.currentUser.id)
     @State private var workouts = MockData.shared.workouts(for: MockData.shared.currentUser.id)
     
+    /// 自分のワークアウト履歴（タイムライン形式）
+    private var myTimelineItems: [MockData.TimelineItem] {
+        MockData.shared.timelineItems.filter { $0.user.id == MockData.shared.currentUser.id }
+    }
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -53,6 +58,9 @@ struct ProfileView: View {
                             .foregroundColor(.primary)
                     }
                 }
+            }
+            .navigationDestination(for: MockData.TimelineItem.self) { item in
+                WorkoutDetailView(item: item)
             }
         }
     }
@@ -107,70 +115,17 @@ struct ProfileView: View {
     // MARK: - Workout History
     
     private var workoutHistory: some View {
-        VStack(spacing: 0) {
-            ForEach(workouts) { workout in
-                VStack(spacing: 0) {
-                    HStack(spacing: 12) {
-                        // 日付
-                        VStack(spacing: 2) {
-                            Text(dayString(from: workout.startedAt))
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            Text(monthString(from: workout.startedAt))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(width: 44)
-                        
-                        // 内容
-                        VStack(alignment: .leading, spacing: 4) {
-                            let exercises = MockData.shared.exercises(for: workout.id)
-                            let sets = MockData.shared.sets(for: workout.id)
-                            
-                            if !exercises.isEmpty {
-                                Text(exercises.map { $0.nameJa }.joined(separator: ", "))
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .lineLimit(1)
-                            }
-                            
-                            HStack(spacing: 8) {
-                                Label("\(workout.durationMinutes)分", systemImage: "clock")
-                                Label("\(sets.count)セット", systemImage: "checkmark.circle")
-                            }
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
-                            .font(.caption)
-                    }
-                    .padding()
-                    
-                    Divider()
-                        .padding(.leading, 68)
+        LazyVStack(spacing: 0) {
+            ForEach(myTimelineItems) { item in
+                NavigationLink(value: item) {
+                    TimelineCardView(item: item)
                 }
+                .buttonStyle(PlainButtonStyle())
+                
+                Divider()
+                    .background(Color.gray.opacity(0.3))
             }
         }
-        .background(Color(.systemGray6))
-        .cornerRadius(16)
-        .padding(.horizontal)
-    }
-    
-    private func dayString(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d"
-        return formatter.string(from: date)
-    }
-    
-    private func monthString(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ja_JP")
-        formatter.dateFormat = "M月"
-        return formatter.string(from: date)
     }
 }
 
