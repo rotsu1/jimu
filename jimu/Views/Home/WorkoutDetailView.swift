@@ -10,47 +10,37 @@ import SwiftUI
 /// ワークアウト詳細モーダル
 struct WorkoutDetailView: View {
     let item: MockData.TimelineItem
-    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // ヘッダー
-                    headerSection
-                    
-                    // コメント
-                    if !item.workout.note.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("コメント")
-                                .font(.headline)
-                            
-                            Text(item.workout.note)
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    // 画像
-                    if item.hasImages {
-                        imageSection
-                    }
-                    
-                    // トレーニング内容
-                    exercisesSection
-                }
-                .padding()
-            }
-            .navigationTitle("ワークアウト詳細")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("閉じる") {
-                        dismiss()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // ヘッダー
+                headerSection
+                
+                // コメント
+                if !item.workout.note.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("コメント")
+                            .font(.headline)
+                        
+                        Text(item.workout.note)
+                            .font(.body)
+                            .foregroundColor(.secondary)
                     }
                 }
+                
+                // 画像
+                if item.hasImages {
+                    imageSection
+                }
+                
+                // トレーニング内容
+                exercisesSection
             }
+            .padding()
         }
+        .navigationTitle("ワークアウト詳細")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private var headerSection: some View {

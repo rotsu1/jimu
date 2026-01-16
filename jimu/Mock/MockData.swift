@@ -303,7 +303,7 @@ final class MockData {
     // MARK: - Timeline Data
     
     /// タイムライン表示用のデータ
-    struct TimelineItem: Identifiable {
+    struct TimelineItem: Identifiable, Hashable {
         let id = UUID()
         let workout: Workout
         let user: Profile
