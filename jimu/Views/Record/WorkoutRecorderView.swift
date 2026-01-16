@@ -13,7 +13,6 @@ struct WorkoutRecorderView: View {
     @Environment(WorkoutRecorderViewModel.self) private var viewModel
     @State private var showCancelConfirmation = false
     @State private var showAddRoutineSheet = false // 追加
-    @State private var showExerciseMenu = false // 追加
     @State private var showReorderSheet = false // 追加
     @State private var activeExerciseForMenu: WorkoutSessionExercise? // 追加
     
@@ -94,7 +93,7 @@ struct WorkoutRecorderView: View {
                         .sheet(isPresented: $showReorderSheet) {
                             ExerciseReorderView(exercises: Bindable(viewModel).selectedExercises)
                         }
-                        .sheet(isPresented: $showExerciseMenu) {
+                        .sheet(item: $activeExerciseForMenu) { sessionExercise in
                             // 種目メニューシート（ハーフモーダル）
                             VStack(spacing: 0) {
                                 Text("種目メニュー")
@@ -104,7 +103,7 @@ struct WorkoutRecorderView: View {
                                 
                                 VStack(spacing: 0) {
                                     Button(action: {
-                                        showExerciseMenu = false
+                                        activeExerciseForMenu = nil
                                         // シートが閉じてから次のシートを開くために少し遅延させる
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                             showReorderSheet = true
@@ -123,22 +122,20 @@ struct WorkoutRecorderView: View {
                                     Divider()
                                         .padding(.leading)
                                     
-                                    if let sessionExercise = activeExerciseForMenu {
-                                        Button(action: {
-                                            withAnimation {
-                                                viewModel.removeExercise(sessionExercise)
-                                            }
-                                            showExerciseMenu = false
-                                        }) {
-                                            HStack {
-                                                Image(systemName: "trash")
+                                    Button(action: {
+                                        withAnimation {
+                                            viewModel.removeExercise(sessionExercise)
+                                        }
+                                        activeExerciseForMenu = nil
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "trash")
                                                 .frame(width: 24)
                                                 Text("この種目を削除")
                                                 Spacer()
-                                            }
-                                            .padding()
-                                            .foregroundColor(.red)
                                         }
+                                        .padding()
+                                        .foregroundColor(.red)
                                     }
                                 }
                                 .background(Color(.secondarySystemGroupedBackground))
@@ -146,7 +143,7 @@ struct WorkoutRecorderView: View {
                                 .padding(.horizontal)
                                 
                                 Button(action: {
-                                    showExerciseMenu = false
+                                    activeExerciseForMenu = nil
                                 }) {
                                     Text("キャンセル")
                                         .font(.headline)
@@ -428,9 +425,12 @@ struct WorkoutRecorderView: View {
                                     .foregroundColor(.green)
                                     .font(.title3)
                                 
-                                Text(sessionExercise.exercise.nameJa)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
+                                NavigationLink(destination: ExerciseDetailView(exercise: sessionExercise.exercise)) {
+                                    Text(sessionExercise.exercise.nameJa)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                }
+                                .buttonStyle(.plain)
                                 
                                 Spacer()
                                 
@@ -444,7 +444,6 @@ struct WorkoutRecorderView: View {
                                 
                                 Button(action: {
                                     activeExerciseForMenu = sessionExercise
-                                    showExerciseMenu = true
                                 }) {
                                     Image(systemName: "ellipsis")
                                         .font(.system(size: 20))
