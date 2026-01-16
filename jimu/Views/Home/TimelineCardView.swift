@@ -11,6 +11,10 @@ import SwiftUI
 struct TimelineCardView: View {
     let item: MockData.TimelineItem
     @State private var currentImageIndex = 0
+    @State private var showingActionSheet = false
+    @State private var showingDeleteAlert = false
+    @State private var showingPrivacyAlert = false
+    @State private var pendingPrivacyState = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -54,9 +58,115 @@ struct TimelineCardView: View {
                 Spacer()
                 
                 // メニューボタン
-                Button(action: {}) {
+                Button(action: {
+                    showingActionSheet = true
+                }) {
                     Image(systemName: "ellipsis")
                         .foregroundColor(.secondary)
+                }
+                .sheet(isPresented: $showingActionSheet) {
+                    VStack(spacing: 0) {
+                        Capsule()
+                            .fill(Color.secondary.opacity(0.3))
+                            .frame(width: 40, height: 4)
+                            .padding(.top, 10)
+                            .padding(.bottom, 20)
+                        
+                        if item.user.id == MockData.shared.currentUser.id {
+                            // 編集ボタン
+                            Button(action: {
+                                showingActionSheet = false
+                                // 編集アクション
+                            }) {
+                                HStack {
+                                    Image(systemName: "pencil")
+                                        .frame(width: 24)
+                                    Text("編集")
+                                    Spacer()
+                                }
+                                .padding()
+                                .foregroundColor(.primary)
+                            }
+                            
+                            Divider()
+                            
+                            // 非公開設定
+                            Button(action: {
+                                pendingPrivacyState = !item.user.isPrivate
+                                showingPrivacyAlert = true
+                            }) {
+                                HStack {
+                                    Image(systemName: item.user.isPrivate ? "lock.open" : "lock")
+                                        .frame(width: 24)
+                                    Text(item.user.isPrivate ? "公開にする" : "非公開にする")
+                                    Spacer()
+                                    Toggle("", isOn: Binding(
+                                        get: { item.user.isPrivate },
+                                        set: { newValue in
+                                            pendingPrivacyState = newValue
+                                            showingPrivacyAlert = true
+                                        }
+                                    ))
+                                    .labelsHidden()
+                                    .allowsHitTesting(false) // ボタンアクションを優先
+                                }
+                                .padding()
+                                .foregroundColor(.primary)
+                            }
+                            
+                            Divider()
+                            
+                            // 削除ボタン
+                            Button(action: {
+                                showingDeleteAlert = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "trash")
+                                        .frame(width: 24)
+                                    Text("削除")
+                                    Spacer()
+                                }
+                                .padding()
+                                .foregroundColor(.red)
+                            }
+                        } else {
+                            // 通報ボタン
+                            Button(action: {
+                                showingActionSheet = false
+                                // 通報アクション
+                            }) {
+                                HStack {
+                                    Image(systemName: "exclamationmark.bubble")
+                                        .frame(width: 24)
+                                    Text("通報する")
+                                    Spacer()
+                                }
+                                .padding()
+                                .foregroundColor(.red)
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                    .presentationDetents([.height(item.user.id == MockData.shared.currentUser.id ? 220 : 120)])
+                    .alert("確認", isPresented: $showingDeleteAlert) {
+                        Button("削除", role: .destructive) {
+                            showingActionSheet = false
+                            // 削除実行
+                        }
+                        Button("キャンセル", role: .cancel) { }
+                    } message: {
+                        Text("本当にこの投稿を削除しますか？この操作は取り消せません。")
+                    }
+                    .alert("公開設定の変更", isPresented: $showingPrivacyAlert) {
+                        Button("変更する") {
+                            // showingActionSheet = false // モーダルを閉じないように変更
+                            // 公開設定変更実行
+                        }
+                        Button("キャンセル", role: .cancel) { }
+                    } message: {
+                        Text(pendingPrivacyState ? "この投稿を非公開にしますか？フォロワー以外は見られなくなります。" : "この投稿を公開にしますか？誰でも見られるようになります。")
+                    }
                 }
             }
             
