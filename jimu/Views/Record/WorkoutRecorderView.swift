@@ -305,11 +305,6 @@ struct WorkoutRecorderView: View {
         VStack(spacing: 0) {
             // ストップウォッチヘッダーはナビゲーションバーに移動したため削除
             
-            // 休憩タイマーオーバーレイ (アクティブ時のみ表示)
-            if viewModel.isRestTimerActive {
-                restTimerOverlay
-            }
-            
             if viewModel.selectedExercises.isEmpty {
                 emptyExerciseView
             } else {
@@ -345,7 +340,8 @@ struct WorkoutRecorderView: View {
         }
         .padding()
         .background(Color.orange)
-        .transition(.move(edge: .top))
+        .cornerRadius(12) // 角丸を追加
+        .transition(.move(edge: .bottom)) // 下から表示
     }
     
     private var emptyExerciseView: some View {
@@ -517,6 +513,11 @@ struct WorkoutRecorderView: View {
     
     private var bottomButtons: some View {
         VStack(spacing: 12) {
+            // 休憩タイマー (アクティブ時のみ表示)
+            if viewModel.isRestTimerActive {
+                restTimerOverlay
+            }
+            
             Button(action: {
                 viewModel.showExercisePicker = true
             }) {
