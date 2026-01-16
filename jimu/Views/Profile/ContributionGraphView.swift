@@ -18,25 +18,35 @@ struct ContributionGraphView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // 月ラベル
-            monthLabels
-            
             HStack(alignment: .top, spacing: 4) {
-                // 曜日ラベル
-                dayLabels
+                // 曜日ラベル（固定）
+                VStack(spacing: 0) {
+                    // 月ラベル分の空白
+                    Text("")
+                        .font(.caption2)
+                        .frame(height: 16)
+                    
+                    dayLabels
+                }
                 
-                // グリッド
+                // 月ラベルとグリッドを一緒にスクロール
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: cellSpacing) {
-                        ForEach(0..<columns, id: \.self) { week in
-                            VStack(spacing: cellSpacing) {
-                                ForEach(0..<rows, id: \.self) { day in
-                                    let date = dateFor(week: week, day: day)
-                                    let intensity = contributions[date] ?? 0
-                                    
-                                    RoundedRectangle(cornerRadius: 2)
-                                        .fill(colorFor(intensity: intensity))
-                                        .frame(width: cellSize, height: cellSize)
+                    VStack(alignment: .leading, spacing: 8) {
+                        // 月ラベル
+                        monthLabelsContent
+                        
+                        // グリッド
+                        HStack(spacing: cellSpacing) {
+                            ForEach(0..<columns, id: \.self) { week in
+                                VStack(spacing: cellSpacing) {
+                                    ForEach(0..<rows, id: \.self) { day in
+                                        let date = dateFor(week: week, day: day)
+                                        let intensity = contributions[date] ?? 0
+                                        
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(colorFor(intensity: intensity))
+                                            .frame(width: cellSize, height: cellSize)
+                                    }
                                 }
                             }
                         }
@@ -52,20 +62,13 @@ struct ContributionGraphView: View {
         .cornerRadius(12)
     }
     
-    private var monthLabels: some View {
+    private var monthLabelsContent: some View {
         HStack(spacing: 0) {
-            Text("")
-                .frame(width: 20) // 曜日ラベル分のオフセット
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
-                    ForEach(monthPositions, id: \.month) { position in
-                        Text(position.name)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .frame(width: CGFloat(position.width) * (cellSize + cellSpacing), alignment: .leading)
-                    }
-                }
+            ForEach(monthPositions, id: \.month) { position in
+                Text(position.name)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .frame(width: CGFloat(position.width) * (cellSize + cellSpacing), alignment: .leading)
             }
         }
     }
