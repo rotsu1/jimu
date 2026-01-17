@@ -11,12 +11,14 @@ import SwiftUI
 struct jimuApp: App {
     @AppStorage("appearanceMode") private var appearanceMode = 0
     @State private var workoutRecorderViewModel = WorkoutRecorderViewModel()
+    @State private var authViewModel = AuthViewModel()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(selectedColorScheme)
                 .environment(workoutRecorderViewModel)
+                .environment(authViewModel)
         }
     }
     
