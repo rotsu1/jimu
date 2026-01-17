@@ -196,11 +196,55 @@ struct WorkoutRecorderView: View {
                             )
                             .presentationDetents([.height(320)])
                         }
-                        .confirmationDialog("トレーニングを中止しますか？", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
-                            Button("中止する", role: .destructive) {
-                                viewModel.cancelWorkout()
+                        .sheet(isPresented: $showCancelConfirmation) {
+                            // 中止確認シート（下からのモーダル）
+                            VStack(spacing: 0) {
+                                Text("トレーニングを中止しますか？")
+                                    .font(.headline)
+                                    .padding(.top, 24)
+                                    .padding(.bottom, 8)
+                                
+                                Text("記録は保存されません")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.bottom, 24)
+                                
+                                VStack(spacing: 12) {
+                                    Button(action: {
+                                        // まずシートを閉じる
+                                        showCancelConfirmation = false
+                                        // シートが閉じてからワークアウトを中止
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                            viewModel.cancelWorkout()
+                                        }
+                                    }) {
+                                        Text("中止する")
+                                            .fontWeight(.semibold)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 14)
+                                            .background(Color.red)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(12)
+                                    }
+                                    
+                                    Button(action: {
+                                        showCancelConfirmation = false
+                                    }) {
+                                        Text("続ける")
+                                            .fontWeight(.medium)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 14)
+                                            .background(Color(.systemGray5))
+                                            .foregroundColor(.primary)
+                                            .cornerRadius(12)
+                                    }
+                                }
+                                .padding(.horizontal, 24)
+                                .padding(.bottom, 24)
                             }
-                            Button("続ける", role: .cancel) {}
+                            .presentationDetents([.height(220)])
+                            .presentationDragIndicator(.visible)
+                            .background(Color(.systemGroupedBackground))
                         }
                         .alert("記録できません", isPresented: Bindable(viewModel).showValidationError) {
                             Button("OK", role: .cancel) {}
