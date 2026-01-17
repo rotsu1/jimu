@@ -8,29 +8,26 @@
 import SwiftUI
 
 struct NotificationSettingsView: View {
-    @AppStorage("notificationEnabled") private var notificationEnabled = true
     @AppStorage("dailyReminder") private var dailyReminder = false
     @AppStorage("reminderTime") private var reminderTime = Date()
+    @AppStorage("newFollowerNotification") private var newFollowerNotification = true
+    @AppStorage("likeNotification") private var likeNotification = true
+    @AppStorage("commentNotification") private var commentNotification = true
     
     var body: some View {
         List {
-            Section {
-                Toggle("通知を許可", isOn: $notificationEnabled)
+            Section(header: Text("リマインダー")) {
+                Toggle("デイリーリマインダー", isOn: $dailyReminder)
+                
+                if dailyReminder {
+                    DatePicker("通知時間", selection: $reminderTime, displayedComponents: .hourAndMinute)
+                }
             }
             
-            if notificationEnabled {
-                Section(header: Text("リマインダー")) {
-                    Toggle("デイリーリマインダー", isOn: $dailyReminder)
-                    
-                    if dailyReminder {
-                        DatePicker("通知時間", selection: $reminderTime, displayedComponents: .hourAndMinute)
-                    }
-                }
-                
-                Section(header: Text("その他")) {
-                    Toggle("新しいフォロワー", isOn: .constant(true))
-                    Toggle("「いいね」", isOn: .constant(true))
-                }
+            Section(header: Text("その他")) {
+                Toggle("新しいフォロワー", isOn: $newFollowerNotification)
+                Toggle("「いいね」", isOn: $likeNotification)
+                Toggle("コメント", isOn: $commentNotification)
             }
         }
         .navigationTitle("通知設定")
