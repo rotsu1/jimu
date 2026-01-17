@@ -10,9 +10,23 @@ import SwiftUI
 struct AccountSettingsView: View {
     @State private var showDeleteAlert = false
     @AppStorage("isFaceIDEnabled") private var isFaceIDEnabled = false
+    @AppStorage("username") private var username = "User"
     
     var body: some View {
         List {
+            Section(header: Text("プロフィール")) {
+                NavigationLink {
+                    EditUsernameView(username: $username)
+                } label: {
+                    HStack {
+                        Label("ユーザー名", systemImage: "person")
+                        Spacer()
+                        Text(username)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            
             Section(header: Text("セキュリティ")) {
                 Toggle(isOn: $isFaceIDEnabled) {
                     Label("Face IDでログイン", systemImage: "faceid")
