@@ -35,8 +35,15 @@ final class WorkoutRecorderViewModel {
     var defaultWorkoutName: String = "" // Added for placeholder
     var completionComment: String = ""
     var completionDate: Date = Date()
+    var completionDurationHours: Int = 0
+    var completionDurationMinutes: Int = 0
     var isPrivate: Bool = false
     var completionImages: [UIImage] = []
+    
+    // MARK: - Elapsed Time Picker
+    var showElapsedTimePicker = false
+    var editingElapsedHours: Int = 0
+    var editingElapsedMinutes: Int = 0
     
     // MARK: - Timer
     var elapsedSeconds: Int = 0
@@ -190,7 +197,9 @@ final class WorkoutRecorderViewModel {
         completionName = "" // Start blank
         defaultWorkoutName = getDefaultWorkoutName() // Calculate default name for placeholder
         completionComment = ""
-        completionDate = Date()
+        completionDate = currentWorkout?.startedAt ?? Date()
+        completionDurationHours = elapsedSeconds / 3600
+        completionDurationMinutes = (elapsedSeconds % 3600) / 60
         isPrivate = false
         completionImages = []
         
@@ -258,6 +267,34 @@ final class WorkoutRecorderViewModel {
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
+    }
+    
+    /// Resume the timer (e.g., when going back from completion view)
+    func resumeTimer() {
+        // Only resume if workout is still active and timer is not running
+        if isWorkoutActive && timer == nil {
+            startTimer()
+        }
+    }
+    
+    // MARK: - Elapsed Time Editing
+    
+    /// Prepare editing values from current elapsed time
+    func prepareElapsedTimeEditing() {
+        editingElapsedHours = elapsedSeconds / 3600
+        editingElapsedMinutes = (elapsedSeconds % 3600) / 60
+        showElapsedTimePicker = true
+    }
+    
+    /// Apply edited elapsed time
+    func applyElapsedTimeEditing() {
+        elapsedSeconds = (editingElapsedHours * 3600) + (editingElapsedMinutes * 60)
+        showElapsedTimePicker = false
+    }
+    
+    /// Get completion duration in seconds
+    var completionDurationSeconds: Int {
+        (completionDurationHours * 3600) + (completionDurationMinutes * 60)
     }
     
     // MARK: - Rest Timer Logic

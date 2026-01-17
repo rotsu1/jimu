@@ -11,6 +11,7 @@ import PhotosUI
 struct WorkoutCompletionView: View {
     @Environment(WorkoutRecorderViewModel.self) private var viewModel
     @State private var selectedItems: [PhotosPickerItem] = []
+    @State private var showDurationPicker = false
     
     var body: some View {
         Form {
@@ -61,9 +62,25 @@ struct WorkoutCompletionView: View {
             }
             
             Section {
-                DatePicker("日時", selection: Bindable(viewModel).completionDate, displayedComponents: [.date, .hourAndMinute])
+                DatePicker("開始日時", selection: Bindable(viewModel).completionDate, displayedComponents: [.date, .hourAndMinute])
             } header: {
                 Text("日時")
+            }
+            
+            Section {
+                Button(action: {
+                    showDurationPicker = true
+                }) {
+                    HStack {
+                        Text("トレーニング時間")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        Text(formattedDuration)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            } header: {
+                Text("トレーニング時間")
             }
             
             Section {
@@ -101,6 +118,94 @@ struct WorkoutCompletionView: View {
                 }
             }
         }
+        .sheet(isPresented: $showDurationPicker) {
+            DurationPickerSheet(
+                hours: Bindable(viewModel).completionDurationHours,
+                minutes: Bindable(viewModel).completionDurationMinutes,
+                onDone: {
+                    showDurationPicker = false
+                }
+            )
+            .presentationDetents([.height(320)])
+        }
+    }
+    
+    private var formattedDuration: String {
+        let hours = viewModel.completionDurationHours
+        let minutes = viewModel.completionDurationMinutes
+        
+        if hours > 0 && minutes > 0 {
+            return "\(hours)時間\(minutes)分"
+        } else if hours > 0 {
+            return "\(hours)時間"
+        } else {
+            return "\(minutes)分"
+        }
+    }
+}
+
+// MARK: - Duration Picker Sheet
+
+struct DurationPickerSheet: View {
+    @Binding var hours: Int
+    @Binding var minutes: Int
+    let onDone: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Spacer()
+                
+                Text("トレーニング時間")
+                    .font(.headline)
+                
+                Spacer()
+            }
+            .overlay(alignment: .trailing) {
+                Button("完了") {
+                    onDone()
+                }
+                .fontWeight(.semibold)
+                .foregroundColor(.green)
+            }
+            .padding()
+            
+            Divider()
+            
+            // Wheel Pickers
+            HStack(spacing: 0) {
+                // Hours Picker
+                Picker("時間", selection: $hours) {
+                    ForEach(0..<24, id: \.self) { hour in
+                        Text("\(hour)").tag(hour)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                
+                Text("時間")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                
+                // Minutes Picker
+                Picker("分", selection: $minutes) {
+                    ForEach(0..<60, id: \.self) { minute in
+                        Text("\(minute)").tag(minute)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                
+                Text("分")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal)
+            
+            Spacer()
+        }
+        .background(Color(.systemGroupedBackground))
     }
 }
 

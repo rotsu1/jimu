@@ -50,6 +50,12 @@ struct WorkoutRecorderView: View {
                             WorkoutCompletionView()
                                 .environment(viewModel)
                         }
+                        .onChange(of: viewModel.showCompletionView) { oldValue, newValue in
+                            // Resume timer when going back from completion view
+                            if oldValue == true && newValue == false && viewModel.isWorkoutActive {
+                                viewModel.resumeTimer()
+                            }
+                        }
                         .toolbar {
                             // トレーニング中のみ（完了画面以外）表示
                             if !viewModel.showCompletionAnimation {
@@ -68,11 +74,18 @@ struct WorkoutRecorderView: View {
                                 }
                                 
                                 ToolbarItem(placement: .principal) {
-                                    VStack(spacing: 2) {
-                                        Text(viewModel.formattedElapsedTime)
-                                            .font(.headline)
-                                            .fontWeight(.bold)
-                                            .monospacedDigit()
+                                    Button(action: {
+                                        viewModel.prepareElapsedTimeEditing()
+                                    }) {
+                                        VStack(spacing: 2) {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "stopwatch.fill")
+                                                    .font(.caption)
+                                                Text(viewModel.formattedElapsedTime)
+                                                    .font(.headline)
+                                                    .fontWeight(.bold)
+                                                    .monospacedDigit()
+                                            }
                                             .foregroundStyle(
                                                 LinearGradient(
                                                     colors: [.green, .mint],
@@ -80,10 +93,11 @@ struct WorkoutRecorderView: View {
                                                     endPoint: .trailing
                                                 )
                                             )
-                                        
-                                        Text("\(viewModel.selectedExercises.count)種目 • \(viewModel.completedSetsCount)/\(viewModel.totalSetsCount)セット")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            
+                                            Text("\(viewModel.selectedExercises.count)種目 • \(viewModel.completedSetsCount)/\(viewModel.totalSetsCount)セット")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
                                 }
                             }
@@ -168,6 +182,19 @@ struct WorkoutRecorderView: View {
                             .presentationDetents([.height(250)])
                             .presentationDragIndicator(.visible)
                             .background(Color(.systemGroupedBackground))
+                        }
+                        .sheet(isPresented: Bindable(viewModel).showElapsedTimePicker) {
+                            ElapsedTimePickerSheet(
+                                hours: Bindable(viewModel).editingElapsedHours,
+                                minutes: Bindable(viewModel).editingElapsedMinutes,
+                                onSave: {
+                                    viewModel.applyElapsedTimeEditing()
+                                },
+                                onCancel: {
+                                    viewModel.showElapsedTimePicker = false
+                                }
+                            )
+                            .presentationDetents([.height(320)])
                         }
                         .confirmationDialog("トレーニングを中止しますか？", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
                             Button("中止する", role: .destructive) {
@@ -580,6 +607,76 @@ struct WorkoutRecorderView: View {
     
     // MARK: - Completion View
     // Moved to WorkoutCongratsView.swift
+}
+
+// MARK: - Elapsed Time Picker Sheet
+
+struct ElapsedTimePickerSheet: View {
+    @Binding var hours: Int
+    @Binding var minutes: Int
+    let onSave: () -> Void
+    let onCancel: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button("キャンセル") {
+                    onCancel()
+                }
+                .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Text("経過時間を編集")
+                    .font(.headline)
+                
+                Spacer()
+                
+                Button("完了") {
+                    onSave()
+                }
+                .fontWeight(.semibold)
+                .foregroundColor(.green)
+            }
+            .padding()
+            
+            Divider()
+            
+            // Wheel Pickers
+            HStack(spacing: 0) {
+                // Hours Picker
+                Picker("時間", selection: $hours) {
+                    ForEach(0..<24, id: \.self) { hour in
+                        Text("\(hour)").tag(hour)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                
+                Text("時間")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                
+                // Minutes Picker
+                Picker("分", selection: $minutes) {
+                    ForEach(0..<60, id: \.self) { minute in
+                        Text("\(minute)").tag(minute)
+                    }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity)
+                
+                Text("分")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal)
+            
+            Spacer()
+        }
+        .background(Color(.systemGroupedBackground))
+    }
 }
 
 #Preview {
