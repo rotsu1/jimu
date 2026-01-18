@@ -35,11 +35,23 @@ class AuthViewModel {
     private let takenUsernames = ["jimu", "admin", "test", "user", "筋トレ太郎"]
     
     init() {
+        // Check for UI Test mode - bypass authentication
+        if CommandLine.arguments.contains("-UITestLoggedIn") {
+            authState = .authenticated
+            return
+        }
+        
         // Check if user is already logged in
         checkAuthStatus()
     }
     
     func checkAuthStatus() {
+        // Skip check in UI Test mode
+        if CommandLine.arguments.contains("-UITestLoggedIn") {
+            authState = .authenticated
+            return
+        }
+        
         // For demo purposes, check UserDefaults for logged in state
         if UserDefaults.standard.bool(forKey: "isLoggedIn") {
             authState = .authenticated

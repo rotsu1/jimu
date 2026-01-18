@@ -57,6 +57,7 @@ struct ProfileView: View {
                         Image(systemName: "gearshape")
                             .foregroundColor(.primary)
                     }
+                    .accessibilityIdentifier("settingsButton")
                 }
             }
             .navigationDestination(for: MockData.TimelineItem.self) { item in

@@ -17,6 +17,7 @@ struct WorkoutCompletionView: View {
         Form {
             Section {
                 TextField("ワークアウト名", text: Bindable(viewModel).completionName, prompt: Text(viewModel.defaultWorkoutName))
+                    .accessibilityIdentifier("workoutNameField")
             } header: {
                 Text("ワークアウト名")
             }
@@ -85,6 +86,7 @@ struct WorkoutCompletionView: View {
             
             Section {
                 Toggle("非公開にする", isOn: Bindable(viewModel).isPrivate)
+                    .accessibilityIdentifier("privatePostToggle")
             }
             
             Section {
@@ -105,6 +107,7 @@ struct WorkoutCompletionView: View {
                     viewModel.saveWorkout()
                 }
                 .fontWeight(.bold)
+                .accessibilityIdentifier("saveWorkoutButton")
             }
         }
         .onChange(of: selectedItems) {

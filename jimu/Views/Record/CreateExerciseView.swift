@@ -24,6 +24,7 @@ struct CreateExerciseView: View {
             Form {
                 Section {
                     TextField("種目名 (例: ベンチプレス)", text: $name)
+                        .accessibilityIdentifier("exerciseNameField")
                 } header: {
                     Text("種目名")
                 }
@@ -82,6 +83,7 @@ struct CreateExerciseView: View {
                             }
                         }
                     }
+                    .accessibilityIdentifier("muscleGroupSelector")
                 } header: {
                     Text("部位 (複数選択可)")
                 }
@@ -115,6 +117,7 @@ struct CreateExerciseView: View {
                         saveExercise()
                     }
                     .disabled(name.isEmpty || selectedMuscleGroups.isEmpty)
+                    .accessibilityIdentifier("saveExerciseButton")
                 }
             }
         }
@@ -157,6 +160,7 @@ struct MuscleGroupSelectionView: View {
                         }
                     }
                 }
+                .accessibilityIdentifier("muscleGroup_\(muscle.rawValue)")
             }
         }
         .navigationTitle("部位を選択")

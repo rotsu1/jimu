@@ -51,27 +51,33 @@ struct PremiumPlanView: View {
                     PlanOptionCard(
                         title: "月額プラン",
                         price: "¥480 / 月",
+                        priceIdentifier: "price_monthly",
                         description: "まずは気軽に始めたい方へ",
                         isSelected: selectedPlan == .monthly,
                         action: { selectedPlan = .monthly }
                     )
+                    .accessibilityIdentifier("plan_monthly")
                     
                     PlanOptionCard(
                         title: "年額プラン",
                         price: "¥3,800 / 年",
+                        priceIdentifier: "price_yearly",
                         description: "2ヶ月分お得（月額換算 ¥316）",
                         isBestValue: true,
                         isSelected: selectedPlan == .yearly,
                         action: { selectedPlan = .yearly }
                     )
+                    .accessibilityIdentifier("plan_yearly")
                     
                     PlanOptionCard(
                         title: "買い切り",
                         price: "¥12,000",
+                        priceIdentifier: "price_lifetime",
                         description: "一度の支払いでずっと使える",
                         isSelected: selectedPlan == .lifetime,
                         action: { selectedPlan = .lifetime }
                     )
+                    .accessibilityIdentifier("plan_lifetime")
                 }
                 .padding()
                 
@@ -105,6 +111,7 @@ struct PremiumPlanView: View {
 struct PlanOptionCard: View {
     let title: String
     let price: String
+    var priceIdentifier: String = ""
     let description: String
     var isBestValue: Bool = false
     var isSelected: Bool
@@ -141,6 +148,7 @@ struct PlanOptionCard: View {
                 Text(price)
                     .font(.headline)
                     .foregroundColor(.primary)
+                    .accessibilityIdentifier(priceIdentifier)
                 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")

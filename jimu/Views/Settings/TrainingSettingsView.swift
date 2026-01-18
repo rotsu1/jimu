@@ -65,6 +65,7 @@ struct TrainingSettingsView: View {
                     Text("kg").tag("kg")
                     Text("lbs").tag("lbs")
                 }
+                .accessibilityIdentifier("weightUnitPicker")
                 
                 Picker("距離単位", selection: $distanceUnit) {
                     Text("km").tag("km")

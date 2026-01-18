@@ -11,6 +11,7 @@ struct SettingsView: View {
     @AppStorage("isPrivateAccount") private var isPrivateAccount = false
     @AppStorage("appearanceMode") private var appearanceMode = 0 // 0: System, 1: Light, 2: Dark
     @AppStorage("isAppleHealthSyncEnabled") private var isAppleHealthSyncEnabled = false
+    @AppStorage("isFaceIDEnabled") private var isFaceIDEnabled = false
     
     @State private var showLogoutAlert = false
     
@@ -36,6 +37,7 @@ struct SettingsView: View {
                             .foregroundColor(.yellow)
                     }
                 }
+                .accessibilityIdentifier("premiumPlanLink")
             }
             
             // 通知設定
@@ -52,11 +54,20 @@ struct SettingsView: View {
                 }
             }
             
+            // セキュリティ
+            Section(header: Text("セキュリティ")) {
+                Toggle(isOn: $isFaceIDEnabled) {
+                    Label("Face ID", systemImage: "faceid")
+                }
+                .accessibilityIdentifier("faceIDToggle")
+            }
+            
             // トレーニング
             Section(header: Text("トレーニング")) {
                 NavigationLink(destination: TrainingSettingsView()) {
                     Label("トレーニング設定", systemImage: "figure.run")
                 }
+                .accessibilityIdentifier("trainingSettingsLink")
             }
             
             // 外観

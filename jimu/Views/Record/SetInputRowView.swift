@@ -55,6 +55,7 @@ struct SetInputRowView: View {
                     .fontWeight(.medium)
                     .frame(width: 60, height: 32) // 幅を制限して中央に寄せる
                     .cornerRadius(6)
+                    .accessibilityIdentifier("weightField_set\(setNumber)")
                     .onChange(of: weight) { _, newValue in
                         onWeightChange(newValue)
                     }
@@ -72,6 +73,7 @@ struct SetInputRowView: View {
                     .fontWeight(.medium)
                     .frame(width: 60, height: 32) // 幅を制限して中央に寄せる
                     .cornerRadius(6)
+                    .accessibilityIdentifier("repsField_set\(setNumber)")
                     .onChange(of: reps) { _, newValue in
                         onRepsChange(newValue)
                     }
@@ -90,6 +92,7 @@ struct SetInputRowView: View {
                     .font(.title2)
                     .foregroundColor(isCompleted ? .green : .secondary)
             }
+            .accessibilityIdentifier("completeButton_set\(setNumber)")
             .frame(width: 40, alignment: .center)
         }
         .padding(.vertical, 4)

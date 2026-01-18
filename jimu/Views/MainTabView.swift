@@ -34,18 +34,21 @@ struct MainTabView: View {
                         Label(Tab.home.rawValue, systemImage: Tab.home.iconName)
                     }
                     .tag(Tab.home)
+                    .accessibilityIdentifier("tab_home")
                 
                 WorkoutRecorderView(selectedTab: $selectedTab)
                     .tabItem {
                         Label(Tab.record.rawValue, systemImage: Tab.record.iconName)
                     }
                     .tag(Tab.record)
+                    .accessibilityIdentifier("tab_record")
                 
                 ProfileView()
                     .tabItem {
                         Label(Tab.profile.rawValue, systemImage: Tab.profile.iconName)
                     }
                     .tag(Tab.profile)
+                    .accessibilityIdentifier("tab_profile")
             }
             .tint(.green)
             

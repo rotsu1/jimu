@@ -370,6 +370,7 @@ struct WorkoutRecorderView: View {
                 .foregroundColor(.white)
                 .cornerRadius(16)
             }
+            .accessibilityIdentifier("startTrainingButton")
             .padding(.horizontal, 24)
             .padding(.bottom, 20) // タブバーの上の余白
             .padding(.top, 10) // スクロールビューとの余白
@@ -443,6 +444,7 @@ struct WorkoutRecorderView: View {
                 .fontWeight(.medium)
                 .foregroundColor(.green)
             }
+            .accessibilityIdentifier("addExerciseButton")
             
             Spacer()
         }
@@ -498,6 +500,7 @@ struct WorkoutRecorderView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 8)
                     }
+                    .accessibilityIdentifier("addSetButton")
                 } header: {
                     VStack(spacing: 0) {
                         // 種目ヘッダー
@@ -609,6 +612,7 @@ struct WorkoutRecorderView: View {
                 .foregroundColor(.primary)
                 .cornerRadius(12)
             }
+            .accessibilityIdentifier("addExerciseButtonBottom")
             
             HStack(spacing: 12) {
                 Button(action: {
@@ -643,6 +647,7 @@ struct WorkoutRecorderView: View {
                     .foregroundColor(.white)
                     .cornerRadius(12)
                 }
+                .accessibilityIdentifier("finishWorkoutButton")
             }
         }
         .padding()

@@ -120,6 +120,7 @@ struct ExercisePickerView: View {
                                 .foregroundColor(.white)
                                 .cornerRadius(12)
                         }
+                        .accessibilityIdentifier("addSelectedExercisesButton")
                         .padding()
                     }
                     .background(Color(.systemBackground))
@@ -138,6 +139,7 @@ struct ExercisePickerView: View {
                             Text("種目を追加")
                         }
                     }
+                    .accessibilityIdentifier("createExerciseButton")
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
